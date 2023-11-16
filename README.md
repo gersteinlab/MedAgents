@@ -1,5 +1,6 @@
 # MedAgents
-We propose a Multi-disciplinary Collaboration (MC) framework. The framework works in five stages: 
+We propose a **Multi-disciplinary Collaboration (MC)** framework. The framework works in five stages: 
+
 (i) expert gathering: gather experts from distinct disciplines according to the clinical question;
 (ii) analysis proposition: domain experts put forward their own analysis with their expertise;
 (iii) report summarization: compose a summarized report on the basis of a previous series of analyses;
