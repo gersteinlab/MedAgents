@@ -4,9 +4,9 @@ import random
 from wrapt_timeout_decorator import timeout
 
 openai.api_type = "azure"
-openai.api_base = "https://gersteinbiocodeeval-eastus2.openai.azure.com/"
-openai.api_version = "2023-05-15"
-openai.api_key = '8dc9c652fa91425cafa763a9265a53cd'
+openai.api_base = ""
+openai.api_version = ""
+openai.api_key = ""
 
 
 @timeout(200) # 200 seconds timeout
