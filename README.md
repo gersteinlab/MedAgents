@@ -1,4 +1,10 @@
-# MedAgents
+# MedAgents: Large Language Models as Collaborators for Zero-shot Medical Reasoning
+
+<p align="center">
+   📖 <a href="https://arxiv.org/abs/2311.10537" target="_blank">Paper</a>  
+</p>
+
+
 We propose a **Multi-disciplinary Collaboration (MC)** framework. The framework works in five stages: 
 (i) expert gathering: gather experts from distinct disciplines according to the clinical question;
 (ii) analysis proposition: domain experts put forward their own analysis with their expertise;
