@@ -42,4 +42,4 @@ If you find this project useful, please cite the following paper:
 
 ## Acknowledgments
 
-We thank Ziming Li (HKUST) and Junlong Li (Shanghai Jiao Tong University) for participating in discussions at the early stages of the project
+We thank Ziming Li (HKUST) and Junlong Li (Shanghai Jiao Tong University) for participating in discussions at the early stages of the project.
