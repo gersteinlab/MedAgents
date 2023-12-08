@@ -22,6 +22,13 @@ Install all required python dependencies:
 pip install -r requirements.txt
 ```
 
+## Data
+
+We evaluate our MC framework on two benchmark datasets MedQA, MedMCQA, and PubMedQA, as well as six subtasks most relevant to the medical domain from MMLU datasets including anatomy, clinical knowledge, college medicine, medical genetics, professional medicine, and college biology.
+
+Please check our Google Drive: https://drive.google.com/file/d/11qNzDYIlimGGJ1fhQn2ux6w_rfFgJbyo/view?usp=sharing
+
+
 ## Implementations
 Input your own openai api key in api_utils.py.
 ```
