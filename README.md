@@ -1,4 +1,4 @@
-# MedAgents: Large Language Models as Collaborators for Zero-shot Medical Reasoning
+# [ACL 2024 Findings] MedAgents: Large Language Models as Collaborators for Zero-shot Medical Reasoning
 
 <p align="center">
    📖 <a href="https://arxiv.org/abs/2311.10537" target="_blank">Paper</a>  
@@ -47,6 +47,3 @@ If you find this project useful, please cite the following paper:
 }
 ```
 
-## Acknowledgments
-
-We thank Ziming Li (HKUST) and Junlong Li (Shanghai Jiao Tong University) for participating in discussions at the early stages of the project.
