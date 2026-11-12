@@ -1,0 +1,992 @@
+{
+ "gpt-4o-mini": {
+  "accuracy": [
+   {
+    "key": "base_cot-cot1000",
+    "label": "CoT · 1.000 tokens",
+    "n": 1273,
+    "correct": 959,
+    "acc": 0.753338570306363,
+    "ci": [
+     0.7289194035080409,
+     0.7762333108145503
+    ],
+    "step1": 0.7614138438880707,
+    "step23": 0.7441077441077442,
+    "mean_requests": 1.0,
+    "mean_generations": 1.0,
+    "mean_prompt_tokens": 299.00706991358993,
+    "mean_completion_tokens": 229.80989787902593,
+    "empty_answers": 0,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 0.00018273699921445387
+   },
+   {
+    "key": "base_cot",
+    "label": "CoT · 300 tokens",
+    "n": 1273,
+    "correct": 815,
+    "acc": 0.6402199528672428,
+    "ci": [
+     0.6134695559735235,
+     0.6661265975352595
+    ],
+    "step1": 0.6539027982326951,
+    "step23": 0.6245791245791246,
+    "mean_requests": 1.0,
+    "mean_generations": 1.0,
+    "mean_prompt_tokens": 299.00706991358993,
+    "mean_completion_tokens": 220.14846818538885,
+    "empty_answers": 88,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 0.00017694014139827178
+   },
+   {
+    "key": "base_direct",
+    "label": "Resposta direta",
+    "n": 1273,
+    "correct": 897,
+    "acc": 0.7046347211311862,
+    "ci": [
+     0.6789878972587283,
+     0.7290501867134732
+    ],
+    "step1": 0.7069219440353461,
+    "step23": 0.702020202020202,
+    "mean_requests": 1.0,
+    "mean_generations": 1.0,
+    "mean_prompt_tokens": 274.00706991358993,
+    "mean_completion_tokens": 5.09897879025923,
+    "empty_answers": 1,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 4.416044776119402e-05
+   },
+   {
+    "key": "base_sc",
+    "label": "Self-Consistency",
+    "n": 1273,
+    "correct": 967,
+    "acc": 0.7596229379418696,
+    "ci": [
+     0.7353901272814394,
+     0.7822935070863632
+    ],
+    "step1": 0.7614138438880707,
+    "step23": 0.7575757575757576,
+    "mean_requests": 3.0,
+    "mean_generations": 21.0,
+    "mean_prompt_tokens": 897.0212097407698,
+    "mean_completion_tokens": 4948.3982717989,
+    "empty_answers": 0,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 0.0031035921445404535
+   },
+   {
+    "key": "syn_verif",
+    "label": "MedAgents",
+    "n": 1273,
+    "correct": 943,
+    "acc": 0.7407698350353495,
+    "ci": [
+     0.7159979827697769,
+     0.764092891462391
+    ],
+    "step1": 0.7584683357879234,
+    "step23": 0.7205387205387206,
+    "mean_requests": 21.93794186959937,
+    "mean_generations": 21.93794186959937,
+    "mean_prompt_tokens": 15961.333857030637,
+    "mean_completion_tokens": 2717.1099764336213,
+    "empty_answers": 0,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 0.0040244660644147695
+   }
+  ],
+  "mcnemar": [
+   {
+    "key": "base_cot-cot1000",
+    "label": "CoT · 1.000 tokens",
+    "n": 1273,
+    "only_ma": 72,
+    "only_other": 88,
+    "p": 0.23558242646926975
+   },
+   {
+    "key": "base_cot",
+    "label": "CoT · 300 tokens",
+    "n": 1273,
+    "only_ma": 198,
+    "only_other": 70,
+    "p": 2.5002033351205633e-15
+   },
+   {
+    "key": "base_direct",
+    "label": "Resposta direta",
+    "n": 1273,
+    "only_ma": 123,
+    "only_other": 77,
+    "p": 0.0014016905787957903
+   },
+   {
+    "key": "base_sc",
+    "label": "Self-Consistency",
+    "n": 1273,
+    "only_ma": 64,
+    "only_other": 88,
+    "p": 0.06174850711174895
+   }
+  ],
+  "by_rounds": [
+   {
+    "rounds": 1,
+    "n": 984,
+    "methods": {
+     "base_cot-cot1000": 0.7947154471544715,
+     "base_cot": 0.6869918699186992,
+     "base_direct": 0.7459349593495935,
+     "base_sc": 0.801829268292683,
+     "syn_verif": 0.7896341463414634
+    },
+    "sc_mean_agreement": 0.9251355013550157,
+    "sc_unanimous_share": 0.6727642276422764,
+    "mean_no_votes_round1": 0.0
+   },
+   {
+    "rounds": 2,
+    "n": 142,
+    "methods": {
+     "base_cot-cot1000": 0.6690140845070423,
+     "base_cot": 0.5140845070422535,
+     "base_direct": 0.6197183098591549,
+     "base_sc": 0.6619718309859155,
+     "syn_verif": 0.6690140845070423
+    },
+    "sc_mean_agreement": 0.8665325285043591,
+    "sc_unanimous_share": 0.47183098591549294,
+    "mean_no_votes_round1": 2.3028169014084505
+   },
+   {
+    "rounds": 3,
+    "n": 147,
+    "methods": {
+     "base_cot-cot1000": 0.5578231292517006,
+     "base_cot": 0.4489795918367347,
+     "base_direct": 0.5102040816326531,
+     "base_sc": 0.5714285714285714,
+     "syn_verif": 0.48299319727891155
+    },
+    "sc_mean_agreement": 0.8315516682863615,
+    "sc_unanimous_share": 0.3945578231292517,
+    "mean_no_votes_round1": 2.1700680272108843
+   }
+  ],
+  "sc_vs_rounds": [
+   {
+    "bin": [
+     0,
+     0.5
+    ],
+    "n": 32,
+    "rounds_dist": {
+     "1": 19,
+     "2": 6,
+     "3": 7
+    },
+    "acc_sc": 0.34375,
+    "acc_ma": 0.28125
+   },
+   {
+    "bin": [
+     0.5,
+     0.7
+    ],
+    "n": 132,
+    "rounds_dist": {
+     "1": 81,
+     "2": 22,
+     "3": 29
+    },
+    "acc_sc": 0.38636363636363635,
+    "acc_ma": 0.45454545454545453
+   },
+   {
+    "bin": [
+     0.7,
+     0.9
+    ],
+    "n": 170,
+    "rounds_dist": {
+     "1": 109,
+     "2": 26,
+     "3": 35
+    },
+    "acc_sc": 0.4823529411764706,
+    "acc_ma": 0.4470588235294118
+   },
+   {
+    "bin": [
+     0.9,
+     1.0
+    ],
+    "n": 939,
+    "rounds_dist": {
+     "1": 775,
+     "2": 88,
+     "3": 76
+    },
+    "acc_sc": 0.8764643237486688,
+    "acc_ma": 0.8498402555910544
+   }
+  ],
+  "cascade": [
+   {
+    "threshold": 0.5,
+    "escalated": 32,
+    "acc": 0.7580518460329929,
+    "generations": 21.65671641791045
+   },
+   {
+    "threshold": 0.6,
+    "escalated": 96,
+    "acc": 0.7588373919874313,
+    "generations": 23.002356637863315
+   },
+   {
+    "threshold": 0.7,
+    "escalated": 164,
+    "acc": 0.7651217596229379,
+    "generations": 24.290652003142185
+   },
+   {
+    "threshold": 0.8,
+    "escalated": 248,
+    "acc": 0.7674783974862529,
+    "generations": 25.869599371563236
+   },
+   {
+    "threshold": 0.9,
+    "escalated": 334,
+    "acc": 0.7604084838963079,
+    "generations": 27.586017282011
+   },
+   {
+    "threshold": 1.0,
+    "escalated": 486,
+    "acc": 0.7509819324430479,
+    "generations": 30.252945797329144
+   }
+  ],
+  "sc_curve": [
+   {
+    "k": 1,
+    "acc": 0.7478358208955227
+   },
+   {
+    "k": 2,
+    "acc": 0.7481736056559306
+   },
+   {
+    "k": 3,
+    "acc": 0.7543165750196386
+   },
+   {
+    "k": 4,
+    "acc": 0.7548232521602513
+   },
+   {
+    "k": 5,
+    "acc": 0.7563157894736844
+   },
+   {
+    "k": 6,
+    "acc": 0.7570463472113117
+   },
+   {
+    "k": 7,
+    "acc": 0.7573841319717203
+   },
+   {
+    "k": 8,
+    "acc": 0.7577140612725846
+   },
+   {
+    "k": 9,
+    "acc": 0.7579379418695993
+   },
+   {
+    "k": 10,
+    "acc": 0.7580047132757264
+   },
+   {
+    "k": 11,
+    "acc": 0.7585310290652004
+   },
+   {
+    "k": 12,
+    "acc": 0.7583660644147684
+   },
+   {
+    "k": 13,
+    "acc": 0.7586684996072269
+   },
+   {
+    "k": 14,
+    "acc": 0.7590298507462688
+   },
+   {
+    "k": 15,
+    "acc": 0.7593440691280439
+   },
+   {
+    "k": 16,
+    "acc": 0.7592223095051059
+   },
+   {
+    "k": 17,
+    "acc": 0.7594736842105264
+   },
+   {
+    "k": 18,
+    "acc": 0.7591673212882952
+   },
+   {
+    "k": 19,
+    "acc": 0.7593362136684996
+   },
+   {
+    "k": 20,
+    "acc": 0.7595797329143754
+   },
+   {
+    "k": 21,
+    "acc": 0.7596229379418696
+   }
+  ],
+  "round_dynamics": {
+   "n": 1273,
+   "acc_initial_report": 0.7415553809897879,
+   "acc_final": 0.7407698350353495,
+   "n_revised": 289,
+   "n_answer_changed": 72,
+   "changed_to_correct": 27,
+   "changed_to_wrong": 28,
+   "transitions": {
+    "v0→v1": {
+     "mantém certa": 145,
+     "errada → certa": 26,
+     "mantém errada": 78,
+     "errada → outra errada": 18,
+     "certa → errada": 22
+    },
+    "v1→v2": {
+     "mantém certa": 70,
+     "errada → outra errada": 10,
+     "mantém errada": 52,
+     "errada → certa": 9,
+     "certa → errada": 6
+    },
+    "v2→v3": {
+     "certa → errada": 9,
+     "mantém certa": 45,
+     "errada → outra errada": 5,
+     "mantém errada": 41,
+     "errada → certa": 1
+    }
+   }
+  },
+  "votes": {
+   "mean_no_per_round": {
+    "1": 0.5074626865671642,
+    "2": 1.0622837370242215,
+    "3": 1.4285714285714286
+   },
+   "questions_per_round": {
+    "1": 1273,
+    "2": 289,
+    "3": 147
+   },
+   "acc_by_no_votes_round1": {
+    "0": {
+     "n": 985,
+     "acc": 0.7888324873096447
+    },
+    "1": {
+     "n": 156,
+     "acc": 0.6474358974358975
+    },
+    "2": {
+     "n": 49,
+     "acc": 0.5102040816326531
+    },
+    "3": {
+     "n": 15,
+     "acc": 0.26666666666666666
+    },
+    "4": {
+     "n": 10,
+     "acc": 0.5
+    },
+    "5": {
+     "n": 42,
+     "acc": 0.5238095238095238
+    },
+    "6": {
+     "n": 15,
+     "acc": 0.5333333333333333
+    },
+    "7": {
+     "n": 1,
+     "acc": 1.0
+    }
+   },
+   "top_dissenting_specialties": [
+    {
+     "domain": "Pulmonology",
+     "no_rate": 0.2964071856287425,
+     "votes": 334
+    },
+    {
+     "domain": "Infectious Disease",
+     "no_rate": 0.2511111111111111,
+     "votes": 450
+    },
+    {
+     "domain": "Allergy and Immunology",
+     "no_rate": 0.25,
+     "votes": 48
+    },
+    {
+     "domain": "Endocrinology",
+     "no_rate": 0.24355300859598855,
+     "votes": 349
+    },
+    {
+     "domain": "Oncology",
+     "no_rate": 0.22,
+     "votes": 250
+    },
+    {
+     "domain": "Dermatology",
+     "no_rate": 0.20118343195266272,
+     "votes": 169
+    },
+    {
+     "domain": "Laboratory Medicine",
+     "no_rate": 0.1935483870967742,
+     "votes": 31
+    },
+    {
+     "domain": "Hematology",
+     "no_rate": 0.1875,
+     "votes": 272
+    },
+    {
+     "domain": "Pain Management",
+     "no_rate": 0.18571428571428572,
+     "votes": 70
+    },
+    {
+     "domain": "Psychiatry",
+     "no_rate": 0.1796875,
+     "votes": 256
+    }
+   ]
+  },
+  "review": {}
+ },
+ "gpt-5.4-nano": {
+  "accuracy": [
+   {
+    "key": "base_cot-cot1000",
+    "label": "CoT · 1.000 tokens",
+    "n": 1273,
+    "correct": 968,
+    "acc": 0.7604084838963079,
+    "ci": [
+     0.7361994497882333,
+     0.7830505495852206
+    ],
+    "step1": 0.7731958762886598,
+    "step23": 0.7457912457912458,
+    "mean_requests": 1.0,
+    "mean_generations": 1.0,
+    "mean_prompt_tokens": 298.00706991358993,
+    "mean_completion_tokens": 121.99293008641006,
+    "empty_answers": 1,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 0.00021209257659073034
+   },
+   {
+    "key": "base_cot",
+    "label": "CoT · 300 tokens",
+    "n": 1273,
+    "correct": 968,
+    "acc": 0.7604084838963079,
+    "ci": [
+     0.7361994497882333,
+     0.7830505495852206
+    ],
+    "step1": 0.7731958762886598,
+    "step23": 0.7457912457912458,
+    "mean_requests": 1.0,
+    "mean_generations": 1.0,
+    "mean_prompt_tokens": 298.00706991358993,
+    "mean_completion_tokens": 122.22152395915161,
+    "empty_answers": 3,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 0.0002123783189316578
+   },
+   {
+    "key": "base_direct",
+    "label": "Resposta direta",
+    "n": 1273,
+    "correct": 778,
+    "acc": 0.6111547525530243,
+    "ci": [
+     0.5840788393057255,
+     0.6375618089939539
+    ],
+    "step1": 0.5994108983799705,
+    "step23": 0.6245791245791246,
+    "mean_requests": 1.0,
+    "mean_generations": 1.0,
+    "mean_prompt_tokens": 273.00706991358993,
+    "mean_completion_tokens": 6.0,
+    "empty_answers": 0,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 6.210141398271788e-05
+   },
+   {
+    "key": "base_sc",
+    "label": "Self-Consistency",
+    "n": 1273,
+    "correct": 1015,
+    "acc": 0.7973291437549097,
+    "ci": [
+     0.7743667715255842,
+     0.8185023831134879
+    ],
+    "step1": 0.8173784977908689,
+    "step23": 0.7744107744107744,
+    "mean_requests": 2.9960722702278084,
+    "mean_generations": 21.0,
+    "mean_prompt_tokens": 893.1500392772978,
+    "mean_completion_tokens": 2658.5891594658287,
+    "empty_answers": 0,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 0.003501866457187748
+   },
+   {
+    "key": "syn_verif",
+    "label": "MedAgents",
+    "n": 1273,
+    "correct": 1004,
+    "acc": 0.788688138256088,
+    "ci": [
+     0.7654102531315955,
+     0.8102288864453105
+    ],
+    "step1": 0.8203240058910162,
+    "step23": 0.7525252525252525,
+    "mean_requests": 22.677926158680282,
+    "mean_generations": 22.677926158680282,
+    "mean_prompt_tokens": 16777.96857816182,
+    "mean_completion_tokens": 3253.7643362136687,
+    "empty_answers": 0,
+    "mean_reviewer_tokens": 0.0,
+    "usd_per_question": 0.007422799135899449
+   }
+  ],
+  "mcnemar": [
+   {
+    "key": "base_cot-cot1000",
+    "label": "CoT · 1.000 tokens",
+    "n": 1273,
+    "only_ma": 130,
+    "only_other": 94,
+    "p": 0.019157338863390237
+   },
+   {
+    "key": "base_cot",
+    "label": "CoT · 300 tokens",
+    "n": 1273,
+    "only_ma": 135,
+    "only_other": 99,
+    "p": 0.021934650431721277
+   },
+   {
+    "key": "base_direct",
+    "label": "Resposta direta",
+    "n": 1273,
+    "only_ma": 301,
+    "only_other": 75,
+    "p": 3.4726660297828135e-33
+   },
+   {
+    "key": "base_sc",
+    "label": "Self-Consistency",
+    "n": 1273,
+    "only_ma": 94,
+    "only_other": 105,
+    "p": 0.47849120098254727
+   }
+  ],
+  "by_rounds": [
+   {
+    "rounds": 1,
+    "n": 979,
+    "methods": {
+     "base_cot-cot1000": 0.8079673135852911,
+     "base_cot": 0.8120531154239019,
+     "base_direct": 0.669050051072523,
+     "base_sc": 0.8518896833503575,
+     "syn_verif": 0.8467824310520939
+    },
+    "sc_mean_agreement": 0.9099177975582481,
+    "sc_unanimous_share": 0.6006128702757916,
+    "mean_no_votes_round1": 0.0
+   },
+   {
+    "rounds": 2,
+    "n": 139,
+    "methods": {
+     "base_cot-cot1000": 0.6690647482014388,
+     "base_cot": 0.6402877697841727,
+     "base_direct": 0.4460431654676259,
+     "base_sc": 0.6906474820143885,
+     "syn_verif": 0.6618705035971223
+    },
+    "sc_mean_agreement": 0.8362452894826987,
+    "sc_unanimous_share": 0.31654676258992803,
+    "mean_no_votes_round1": 3.79136690647482
+   },
+   {
+    "rounds": 3,
+    "n": 155,
+    "methods": {
+     "base_cot-cot1000": 0.5419354838709678,
+     "base_cot": 0.5419354838709678,
+     "base_direct": 0.3935483870967742,
+     "base_sc": 0.5483870967741935,
+     "syn_verif": 0.535483870967742
+    },
+    "sc_mean_agreement": 0.7969278033794154,
+    "sc_unanimous_share": 0.25806451612903225,
+    "mean_no_votes_round1": 4.025806451612903
+   }
+  ],
+  "sc_vs_rounds": [
+   {
+    "bin": [
+     0,
+     0.5
+    ],
+    "n": 37,
+    "rounds_dist": {
+     "1": 19,
+     "2": 9,
+     "3": 9
+    },
+    "acc_sc": 0.5675675675675675,
+    "acc_ma": 0.4864864864864865
+   },
+   {
+    "bin": [
+     0.5,
+     0.7
+    ],
+    "n": 163,
+    "rounds_dist": {
+     "1": 102,
+     "2": 25,
+     "3": 36
+    },
+    "acc_sc": 0.49693251533742333,
+    "acc_ma": 0.5950920245398773
+   },
+   {
+    "bin": [
+     0.7,
+     0.9
+    ],
+    "n": 200,
+    "rounds_dist": {
+     "1": 132,
+     "2": 26,
+     "3": 42
+    },
+    "acc_sc": 0.605,
+    "acc_ma": 0.64
+   },
+   {
+    "bin": [
+     0.9,
+     1.0
+    ],
+    "n": 873,
+    "rounds_dist": {
+     "1": 726,
+     "2": 79,
+     "3": 68
+    },
+    "acc_sc": 0.9072164948453608,
+    "acc_ma": 0.8717067583046965
+   }
+  ],
+  "cascade": [
+   {
+    "threshold": 0.5,
+    "escalated": 37,
+    "acc": 0.7949725058915946,
+    "generations": 21.792615868028278
+   },
+   {
+    "threshold": 0.6,
+    "escalated": 121,
+    "acc": 0.7989002356637863,
+    "generations": 23.657501963864885
+   },
+   {
+    "threshold": 0.7,
+    "escalated": 200,
+    "acc": 0.8075412411626081,
+    "generations": 25.181461115475255
+   },
+   {
+    "threshold": 0.8,
+    "escalated": 290,
+    "acc": 0.8138256087981147,
+    "generations": 27.140612725844463
+   },
+   {
+    "threshold": 0.9,
+    "escalated": 400,
+    "acc": 0.8130400628436764,
+    "generations": 29.238020424194815
+   },
+   {
+    "threshold": 1.0,
+    "escalated": 601,
+    "acc": 0.800471327572663,
+    "generations": 33.021209740769834
+   }
+  ],
+  "sc_curve": [
+   {
+    "k": 1,
+    "acc": 0.7599882168106836
+   },
+   {
+    "k": 2,
+    "acc": 0.7606952081696784
+   },
+   {
+    "k": 3,
+    "acc": 0.7763000785545952
+   },
+   {
+    "k": 4,
+    "acc": 0.7795993715632367
+   },
+   {
+    "k": 5,
+    "acc": 0.7829300864100549
+   },
+   {
+    "k": 6,
+    "acc": 0.7837981146897097
+   },
+   {
+    "k": 7,
+    "acc": 0.7865357423409269
+   },
+   {
+    "k": 8,
+    "acc": 0.7872113118617442
+   },
+   {
+    "k": 9,
+    "acc": 0.7888648860958368
+   },
+   {
+    "k": 10,
+    "acc": 0.7891162608012573
+   },
+   {
+    "k": 11,
+    "acc": 0.7901139041633942
+   },
+   {
+    "k": 12,
+    "acc": 0.7905145326001576
+   },
+   {
+    "k": 13,
+    "acc": 0.7912961508248234
+   },
+   {
+    "k": 14,
+    "acc": 0.7918774548311074
+   },
+   {
+    "k": 15,
+    "acc": 0.7921877454831111
+   },
+   {
+    "k": 16,
+    "acc": 0.7924666142969361
+   },
+   {
+    "k": 17,
+    "acc": 0.7931500392772975
+   },
+   {
+    "k": 18,
+    "acc": 0.7936567164179104
+   },
+   {
+    "k": 19,
+    "acc": 0.7941516103692063
+   },
+   {
+    "k": 20,
+    "acc": 0.794878240377062
+   },
+   {
+    "k": 21,
+    "acc": 0.7973291437549097
+   }
+  ],
+  "round_dynamics": {
+   "n": 1273,
+   "acc_initial_report": 0.7737627651217597,
+   "acc_final": 0.788688138256088,
+   "n_revised": 294,
+   "n_answer_changed": 65,
+   "changed_to_correct": 36,
+   "changed_to_wrong": 17,
+   "transitions": {
+    "v0→v1": {
+     "mantém errada": 98,
+     "errada → outra errada": 13,
+     "mantém certa": 145,
+     "errada → certa": 27,
+     "certa → errada": 11
+    },
+    "v1→v2": {
+     "errada → certa": 6,
+     "mantém certa": 74,
+     "mantém errada": 63,
+     "certa → errada": 6,
+     "errada → outra errada": 6
+    },
+    "v2→v3": {
+     "mantém certa": 50,
+     "mantém errada": 46,
+     "errada → outra errada": 5,
+     "certa → errada": 3,
+     "errada → certa": 6
+    }
+   }
+  },
+  "votes": {
+   "mean_no_per_round": {
+    "1": 0.9041633935585232,
+    "2": 2.0714285714285716,
+    "3": 2.870967741935484
+   },
+   "questions_per_round": {
+    "1": 1273,
+    "2": 294,
+    "3": 155
+   },
+   "acc_by_no_votes_round1": {
+    "0": {
+     "n": 979,
+     "acc": 0.8467824310520939
+    },
+    "1": {
+     "n": 90,
+     "acc": 0.7
+    },
+    "2": {
+     "n": 31,
+     "acc": 0.5806451612903226
+    },
+    "3": {
+     "n": 19,
+     "acc": 0.5263157894736842
+    },
+    "4": {
+     "n": 15,
+     "acc": 0.4
+    },
+    "5": {
+     "n": 28,
+     "acc": 0.4642857142857143
+    },
+    "6": {
+     "n": 35,
+     "acc": 0.5142857142857142
+    },
+    "7": {
+     "n": 76,
+     "acc": 0.618421052631579
+    }
+   },
+   "top_dissenting_specialties": [
+    {
+     "domain": "Otolaryngology (ENT)",
+     "no_rate": 0.3684210526315789,
+     "votes": 38
+    },
+    {
+     "domain": "Cardiology",
+     "no_rate": 0.2867383512544803,
+     "votes": 279
+    },
+    {
+     "domain": "General Surgery",
+     "no_rate": 0.2727272727272727,
+     "votes": 33
+    },
+    {
+     "domain": "Infectious Disease",
+     "no_rate": 0.2633333333333333,
+     "votes": 300
+    },
+    {
+     "domain": "Ophthalmology",
+     "no_rate": 0.25806451612903225,
+     "votes": 62
+    },
+    {
+     "domain": "Radiology",
+     "no_rate": 0.23553719008264462,
+     "votes": 242
+    },
+    {
+     "domain": "Endocrinology",
+     "no_rate": 0.2344213649851632,
+     "votes": 337
+    },
+    {
+     "domain": "Orthopedics",
+     "no_rate": 0.21839080459770116,
+     "votes": 87
+    },
+    {
+     "domain": "Gastroenterology",
+     "no_rate": 0.21455938697318008,
+     "votes": 261
+    },
+    {
+     "domain": "Nephrology",
+     "no_rate": 0.20121951219512196,
+     "votes": 164
+    }
+   ]
+  },
+  "review": {}
+ }
+}

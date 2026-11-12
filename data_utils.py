@@ -31,7 +31,7 @@ class MyDataset:
     def load(self): # load dataset -> self.data
         filename = os.path.join(self.dir_path, self.split + '.jsonl')
         self.data = []
-        with open(filename) as f:
+        with open(filename, encoding='utf-8') as f:
             for item in jsonlines.Reader(f):
                 self.data.append(item)
 
@@ -148,11 +148,20 @@ def cleansing_analysis(analyses, domains, type):
     return analysis
 
 
-def cleansing_syn_report(question, options, raw_synthesized_report):
+def cleansing_syn_report(question, options, raw_synthesized_report, fix_key_knowledge=False):
 
     tmp = raw_synthesized_report.split("Total Analysis:")
-    total_analysis_text = tmp[1].strip()
-    if "Key Knowledge" in tmp:
+    # O original quebra (IndexError) quando o modelo não escreve "Total Analysis:".
+    # Isso não acontecia com o gpt-4o-mini, mas acontece com modelos menores; nesse caso
+    # usamos o texto inteiro como análise. Quando o rótulo existe, nada muda.
+    # Obs.: o teste `"Key Knowledge" in tmp` abaixo é do código original e compara com
+    # os itens da lista, então na prática o Key Knowledge nunca entra no relatório.
+    # Mantido assim para não alterar o método reproduzido.
+    total_analysis_text = tmp[1].strip() if len(tmp) > 1 else raw_synthesized_report.strip()
+    # fix_key_knowledge=True (opção --fix_key_knowledge): procura o rótulo no texto, como o
+    # artigo descreve, e o Key Knowledge passa a fazer parte do relatório votado.
+    has_kk = ("Key Knowledge:" in tmp[0]) if fix_key_knowledge else ("Key Knowledge" in tmp)
+    if has_kk:
         key_knowledge_text = tmp[0].split("Key Knowledge:")[-1].strip()
         final_syn_repo = f"Question: {question} \n" \
             f"Options: {options} \n" \
@@ -190,6 +199,21 @@ def cleansing_voting(output):
     else:
         ans = ans[0]
     return ans
+
+
+def cleansing_review(output):
+    # parses "Vote: ... Answer: ... Revisions: ..."; a failed or refused review counts as an abstention (yes)
+    review = {'vote': 'yes', 'answer': '', 'revisions': '', 'raw': output}
+    if output in ["ERROR.", "REFUSED."]:
+        return review
+    vote = re.search(r'vote\s*:\s*\W*(yes|no)', output, re.IGNORECASE)
+    review['vote'] = vote.group(1).lower() if vote else cleansing_voting(output)
+    answer = re.search(r'answer\s*:\s*\W*([A-E])\b', output, re.IGNORECASE)
+    if answer:
+        review['answer'] = answer.group(1).upper()
+    if 'revisions:' in output.lower():
+        review['revisions'] = output[output.lower().rfind('revisions:') + len('revisions:'):].strip()
+    return review
 
 
 def transform_dict2text(analyses, type, content):

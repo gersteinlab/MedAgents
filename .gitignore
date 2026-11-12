@@ -1,0 +1,17 @@
+# ambiente e segredos
+.venv/
+__pycache__/
+.env
+
+# dados baixados (baixar_dados.py) e saídas brutas das execuções
+ext_data/
+outputs/
+legacy/
+logs/
+
+# páginas geradas pelos scripts de report/ (publicadas à parte)
+report/*.html
+!report/template.html
+
+# retrato intermediário de uma execução, sem uso
+analysis/parcial.json

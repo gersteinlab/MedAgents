@@ -1,0 +1,981 @@
+{
+ "split": "test",
+ "n": 1273,
+ "stage1": [
+  {
+   "nano": 21,
+   "mini": 0,
+   "label": "21 amostras do nano",
+   "acc": 0.7965435978004713,
+   "ci": [
+    0.7735519057025877,
+    0.817750883930833
+   ],
+   "usd": 0.003507695404556164
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "label": "21 amostras do 4o-mini",
+   "acc": 0.7619795758051846,
+   "ci": [
+    0.7378184200876804,
+    0.7845643092970765
+   ],
+   "usd": 0.003101804163393558
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "label": "14 do nano + 7 do 4o-mini",
+   "acc": 0.8028593872741557,
+   "ci": [
+    0.7800744916439367,
+    0.8237592180346954
+   ],
+   "usd": 0.0033723983241686272
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "label": "11 do nano + 10 do 4o-mini",
+   "acc": 0.799057344854674,
+   "ci": [
+    0.7759968923937639,
+    0.8200049922566108
+   ],
+   "usd": 0.0033144138611453963
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "label": "7 do nano + 14 do 4o-mini",
+   "acc": 0.7834406912804398,
+   "ci": [
+    0.7597184894685068,
+    0.8049560950688391
+   ],
+   "usd": 0.003237101243781096
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "label": "21 do nano + 21 do 4o-mini",
+   "acc": 0.795758051846033,
+   "ci": [
+    0.7727371688765999,
+    0.816999255751169
+   ],
+   "usd": 0.006609499567949724
+  }
+ ],
+ "stage2": {
+  "n": 501,
+  "gold_in_candidates": 416,
+  "pooled_correct": 287,
+  "rows": [
+   {
+    "variant": "none",
+    "who": "3 nano + 3 4o-mini",
+    "correct": 325,
+    "n": 501,
+    "fixed": 75,
+    "broke": 37,
+    "p": 0.0004209679285168772,
+    "usd": 0.002122198902195607
+   },
+   {
+    "variant": "none",
+    "who": "3 nano",
+    "correct": 321,
+    "n": 501,
+    "fixed": 77,
+    "broke": 43,
+    "p": 0.002446856762814159,
+    "usd": 0.001263099201596806
+   },
+   {
+    "variant": "none",
+    "who": "3 4o-mini",
+    "correct": 229,
+    "n": 501,
+    "fixed": 47,
+    "broke": 105,
+    "p": 2.899910058603122e-06,
+    "usd": 0.0008590997005988029
+   },
+   {
+    "variant": "books",
+    "who": "3 nano + 3 4o-mini",
+    "correct": 338,
+    "n": 501,
+    "fixed": 92,
+    "broke": 41,
+    "p": 1.1515889454893262e-05,
+    "usd": 0.003113821956087826
+   },
+   {
+    "variant": "books",
+    "who": "3 nano",
+    "correct": 353,
+    "n": 501,
+    "fixed": 104,
+    "broke": 38,
+    "p": 2.7833777337348257e-08,
+    "usd": 0.0020107186626746524
+   },
+   {
+    "variant": "books",
+    "who": "3 4o-mini",
+    "correct": 289,
+    "n": 501,
+    "fixed": 71,
+    "broke": 69,
+    "p": 0.9326867554513671,
+    "usd": 0.0014028622754491003
+   },
+   {
+    "variant": "books_cases",
+    "who": "3 nano + 3 4o-mini",
+    "correct": 335,
+    "n": 501,
+    "fixed": 86,
+    "broke": 38,
+    "p": 1.9451913271625694e-05,
+    "usd": 0.003297941916167668
+   },
+   {
+    "variant": "books_cases",
+    "who": "3 nano",
+    "correct": 352,
+    "n": 501,
+    "fixed": 99,
+    "broke": 34,
+    "p": 1.487726043043053e-08,
+    "usd": 0.0021055553892215563
+   },
+   {
+    "variant": "books_cases",
+    "who": "3 4o-mini",
+    "correct": 275,
+    "n": 501,
+    "fixed": 62,
+    "broke": 74,
+    "p": 0.3455925658608852,
+    "usd": 0.0014921455089820365
+   }
+  ]
+ },
+ "full": [
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "none",
+   "threshold": 0.5,
+   "escalated": 42.0,
+   "acc": 0.7996857816182247,
+   "usd": 0.00357771296456576
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "none",
+   "threshold": 0.6,
+   "escalated": 118.0,
+   "acc": 0.8067556952081697,
+   "usd": 0.003704411406487886
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "none",
+   "threshold": 0.7,
+   "escalated": 189.0,
+   "acc": 0.8106834249803614,
+   "usd": 0.0038227744245993454
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "none",
+   "threshold": 0.8,
+   "escalated": 272.0,
+   "acc": 0.8185388845247447,
+   "usd": 0.003961142459856404
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "none",
+   "threshold": 0.9,
+   "escalated": 360.0,
+   "acc": 0.8256087981146897,
+   "usd": 0.004107845918924128
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books",
+   "threshold": 0.5,
+   "escalated": 42.0,
+   "acc": 0.7989002356637863,
+   "usd": 0.003610429514654898
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books",
+   "threshold": 0.6,
+   "escalated": 118.0,
+   "acc": 0.8067556952081697,
+   "usd": 0.0037963293329287984
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books",
+   "threshold": 0.7,
+   "escalated": 189.0,
+   "acc": 0.8130400628436764,
+   "usd": 0.003969998900000468
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books",
+   "threshold": 0.8,
+   "escalated": 272.0,
+   "acc": 0.8224666142969363,
+   "usd": 0.00417302106995749
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books",
+   "threshold": 0.9,
+   "escalated": 360.0,
+   "acc": 0.8295365278868814,
+   "usd": 0.0043882734911167435
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books_cases",
+   "threshold": 0.5,
+   "escalated": 42.0,
+   "acc": 0.7989002356637863,
+   "usd": 0.003616504171625325
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books_cases",
+   "threshold": 0.6,
+   "escalated": 118.0,
+   "acc": 0.8036135113904164,
+   "usd": 0.0038133962263219023
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books_cases",
+   "threshold": 0.7,
+   "escalated": 189.0,
+   "acc": 0.8083267871170463,
+   "usd": 0.003997334856367389
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books_cases",
+   "threshold": 0.8,
+   "escalated": 272.0,
+   "acc": 0.819324430479183,
+   "usd": 0.004212361705575493
+  },
+  {
+   "nano": 21,
+   "mini": 0,
+   "variant": "books_cases",
+   "threshold": 0.9,
+   "escalated": 360.0,
+   "acc": 0.8295365278868814,
+   "usd": 0.004440341979434687
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.5,
+   "escalated": 41.0,
+   "acc": 0.7674783974862529,
+   "usd": 0.0031701546386410204
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.6,
+   "escalated": 117.0,
+   "acc": 0.7776904948939513,
+   "usd": 0.003296853080563146
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.7,
+   "escalated": 184.0,
+   "acc": 0.7902592301649647,
+   "usd": 0.003408547759626073
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.8,
+   "escalated": 237.0,
+   "acc": 0.7949725058915946,
+   "usd": 0.0034969032520191343
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.9,
+   "escalated": 313.0,
+   "acc": 0.809897879025923,
+   "usd": 0.00362360169394126
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.5,
+   "escalated": 41.0,
+   "acc": 0.7674783974862529,
+   "usd": 0.003202092223251846
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.6,
+   "escalated": 117.0,
+   "acc": 0.7784760408483896,
+   "usd": 0.003387992041525746
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.7,
+   "escalated": 184.0,
+   "acc": 0.7894736842105263,
+   "usd": 0.0035518774076356316
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.8,
+   "escalated": 237.0,
+   "acc": 0.798114689709348,
+   "usd": 0.0036815180703792727
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.9,
+   "escalated": 313.0,
+   "acc": 0.812254516889238,
+   "usd": 0.0038674178886531725
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.5,
+   "escalated": 41.0,
+   "acc": 0.7682639434406913,
+   "usd": 0.003208022245532501
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.6,
+   "escalated": 117.0,
+   "acc": 0.7776904948939513,
+   "usd": 0.003404914300229078
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.7,
+   "escalated": 184.0,
+   "acc": 0.7910447761194029,
+   "usd": 0.0035784901905536923
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.8,
+   "escalated": 237.0,
+   "acc": 0.800471327572663,
+   "usd": 0.0037157964918552526
+  },
+  {
+   "nano": 0,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.9,
+   "escalated": 313.0,
+   "acc": 0.8114689709347996,
+   "usd": 0.00391268854655183
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "none",
+   "threshold": 0.5,
+   "escalated": 63.78,
+   "acc": 0.8058130400628436,
+   "usd": 0.003478724990297485
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "none",
+   "threshold": 0.6,
+   "escalated": 158.4,
+   "acc": 0.8147996857816185,
+   "usd": 0.0036364645504905315
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "none",
+   "threshold": 0.7,
+   "escalated": 272.36,
+   "acc": 0.8232521602513745,
+   "usd": 0.0038264455299832347
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "none",
+   "threshold": 0.8,
+   "escalated": 377.88,
+   "acc": 0.8257973291437548,
+   "usd": 0.004002356314083534
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "none",
+   "threshold": 0.9,
+   "escalated": 469.12,
+   "acc": 0.826378633150039,
+   "usd": 0.00415446112778057
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books",
+   "threshold": 0.5,
+   "escalated": 63.78,
+   "acc": 0.807682639434407,
+   "usd": 0.0035284074085042763
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books",
+   "threshold": 0.6,
+   "escalated": 158.4,
+   "acc": 0.8221995286724273,
+   "usd": 0.003759852682255282
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books",
+   "threshold": 0.7,
+   "escalated": 272.36,
+   "acc": 0.8323644933228599,
+   "usd": 0.004038604567656514
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books",
+   "threshold": 0.8,
+   "escalated": 377.88,
+   "acc": 0.8332443047918305,
+   "usd": 0.004296711789028382
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books",
+   "threshold": 0.9,
+   "escalated": 469.12,
+   "acc": 0.8340298507462687,
+   "usd": 0.00451988941296668
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books_cases",
+   "threshold": 0.5,
+   "escalated": 63.78,
+   "acc": 0.805043205027494,
+   "usd": 0.003537632209017939
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books_cases",
+   "threshold": 0.6,
+   "escalated": 158.4,
+   "acc": 0.8162608012568733,
+   "usd": 0.003782762817115178
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books_cases",
+   "threshold": 0.7,
+   "escalated": 272.36,
+   "acc": 0.8276355066771405,
+   "usd": 0.004077997271762834
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books_cases",
+   "threshold": 0.8,
+   "escalated": 377.88,
+   "acc": 0.8303692065985863,
+   "usd": 0.004351366345599451
+  },
+  {
+   "nano": 14,
+   "mini": 7,
+   "variant": "books_cases",
+   "threshold": 0.9,
+   "escalated": 469.12,
+   "acc": 0.8324430479183036,
+   "usd": 0.004587740438632552
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "none",
+   "threshold": 0.5,
+   "escalated": 67.82,
+   "acc": 0.805247446975648,
+   "usd": 0.0034274755497132724
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "none",
+   "threshold": 0.6,
+   "escalated": 192.84,
+   "acc": 0.8160251374705418,
+   "usd": 0.003635894486675169
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "none",
+   "threshold": 0.7,
+   "escalated": 289.94,
+   "acc": 0.8218538884524744,
+   "usd": 0.0037977684170783063
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "none",
+   "threshold": 0.8,
+   "escalated": 385.8,
+   "acc": 0.8254831107619797,
+   "usd": 0.003957575162376398
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "none",
+   "threshold": 0.9,
+   "escalated": 470.76,
+   "acc": 0.8251060487038491,
+   "usd": 0.004099210683767238
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books",
+   "threshold": 0.5,
+   "escalated": 67.82,
+   "acc": 0.808892380204242,
+   "usd": 0.0034803049884524475
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books",
+   "threshold": 0.6,
+   "escalated": 192.84,
+   "acc": 0.8250589159465828,
+   "usd": 0.003786110189513013
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books",
+   "threshold": 0.7,
+   "escalated": 289.94,
+   "acc": 0.8312647289866457,
+   "usd": 0.004023621667860325
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books",
+   "threshold": 0.8,
+   "escalated": 385.8,
+   "acc": 0.8329300864100552,
+   "usd": 0.004258100043909484
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books",
+   "threshold": 0.9,
+   "escalated": 470.76,
+   "acc": 0.8335899450117836,
+   "usd": 0.00446591647233778
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books_cases",
+   "threshold": 0.5,
+   "escalated": 67.82,
+   "acc": 0.8054202670856244,
+   "usd": 0.0034901141131127894
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books_cases",
+   "threshold": 0.6,
+   "escalated": 192.84,
+   "acc": 0.8213668499607226,
+   "usd": 0.0038140015430886587
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books_cases",
+   "threshold": 0.7,
+   "escalated": 289.94,
+   "acc": 0.8276512175962296,
+   "usd": 0.004065557049812839
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books_cases",
+   "threshold": 0.8,
+   "escalated": 385.8,
+   "acc": 0.830259230164965,
+   "usd": 0.004313900107223548
+  },
+  {
+   "nano": 11,
+   "mini": 10,
+   "variant": "books_cases",
+   "threshold": 0.9,
+   "escalated": 470.76,
+   "acc": 0.831139041633936,
+   "usd": 0.004534004698894879
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "none",
+   "threshold": 0.5,
+   "escalated": 59.38,
+   "acc": 0.7884524744697566,
+   "usd": 0.0033360927369565675
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "none",
+   "threshold": 0.6,
+   "escalated": 153.56,
+   "acc": 0.802482325216025,
+   "usd": 0.0034930987798542754
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "none",
+   "threshold": 0.7,
+   "escalated": 267.32,
+   "acc": 0.817643362136685,
+   "usd": 0.003682746342394552
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "none",
+   "threshold": 0.8,
+   "escalated": 362.68,
+   "acc": 0.8230007855459545,
+   "usd": 0.0038417195453115775
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "none",
+   "threshold": 0.9,
+   "escalated": 452.16,
+   "acc": 0.8240534171249019,
+   "usd": 0.003990890289827259
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books",
+   "threshold": 0.5,
+   "escalated": 59.38,
+   "acc": 0.7887038491751771,
+   "usd": 0.0033823477070587826
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books",
+   "threshold": 0.6,
+   "escalated": 153.56,
+   "acc": 0.8040377062058133,
+   "usd": 0.003612716718703992
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books",
+   "threshold": 0.7,
+   "escalated": 267.32,
+   "acc": 0.8241476826394344,
+   "usd": 0.003890979394057135
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books",
+   "threshold": 0.8,
+   "escalated": 362.68,
+   "acc": 0.8318460329929301,
+   "usd": 0.00412423474498607
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books",
+   "threshold": 0.9,
+   "escalated": 452.16,
+   "acc": 0.8328986645718776,
+   "usd": 0.0043431073205011834
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books_cases",
+   "threshold": 0.5,
+   "escalated": 59.38,
+   "acc": 0.7882639434406914,
+   "usd": 0.0033909361149374482
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books_cases",
+   "threshold": 0.6,
+   "escalated": 153.56,
+   "acc": 0.8038020424194819,
+   "usd": 0.003634926821665391
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books_cases",
+   "threshold": 0.7,
+   "escalated": 267.32,
+   "acc": 0.8226865671641787,
+   "usd": 0.003929643139327004
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books_cases",
+   "threshold": 0.8,
+   "escalated": 362.68,
+   "acc": 0.8297093479968582,
+   "usd": 0.004176690854272604
+  },
+  {
+   "nano": 7,
+   "mini": 14,
+   "variant": "books_cases",
+   "threshold": 0.9,
+   "escalated": 452.16,
+   "acc": 0.8299450117831896,
+   "usd": 0.004408505341828522
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.5,
+   "escalated": 59.0,
+   "acc": 0.8020424194815396,
+   "usd": 0.006707857568915585
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.6,
+   "escalated": 208.0,
+   "acc": 0.8185388845247447,
+   "usd": 0.006956253198473437
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.7,
+   "escalated": 304.0,
+   "acc": 0.821681068342498,
+   "usd": 0.007116293335638227
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.8,
+   "escalated": 401.0,
+   "acc": 0.826394344069128,
+   "usd": 0.007278000557565151
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "none",
+   "threshold": 0.9,
+   "escalated": 501.0,
+   "acc": 0.8240377062058131,
+   "usd": 0.007444709033778475
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.5,
+   "escalated": 59.0,
+   "acc": 0.802827965435978,
+   "usd": 0.006753816532136041
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.6,
+   "escalated": 208.0,
+   "acc": 0.8271798900235664,
+   "usd": 0.0071182780179625035
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.7,
+   "escalated": 304.0,
+   "acc": 0.8311076197957581,
+   "usd": 0.007353098841045324
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.8,
+   "escalated": 401.0,
+   "acc": 0.8342498036135114,
+   "usd": 0.007590365714368592
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books",
+   "threshold": 0.9,
+   "escalated": 501.0,
+   "acc": 0.8342498036135114,
+   "usd": 0.007834970738413197
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.5,
+   "escalated": 59.0,
+   "acc": 0.8012568735271013,
+   "usd": 0.006762349978832593
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.6,
+   "escalated": 208.0,
+   "acc": 0.8232521602513747,
+   "usd": 0.007148362033435093
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.7,
+   "escalated": 304.0,
+   "acc": 0.8279654359780048,
+   "usd": 0.007397067786736033
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.8,
+   "escalated": 401.0,
+   "acc": 0.8318931657501963,
+   "usd": 0.00764836422496719
+  },
+  {
+   "nano": 21,
+   "mini": 21,
+   "variant": "books_cases",
+   "threshold": 0.9,
+   "escalated": 501.0,
+   "acc": 0.8318931657501963,
+   "usd": 0.007907432717989002
+  }
+ ]
+}

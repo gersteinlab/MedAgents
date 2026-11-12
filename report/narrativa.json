@@ -1,0 +1,50 @@
+{
+ "lede": "Na primeira parte, o MedAgents com gpt-4o-mini superou a resposta direta e o CoT curto, mas empatou com um CoT de 1.000 tokens. Aqui ele enfrenta um adversário mais justo: o <strong>Self-Consistency</strong>, que gasta o mesmo número de gerações (21) votando entre amostras independentes do mesmo CoT, sem papéis nem discussão. Os cinco métodos rodaram de novo nas 1.273 questões do MedQA com dois modelos, <strong>gpt-4o-mini</strong> e <strong>gpt-5.4-nano</strong>, e cada versão do relatório do MedAgents foi registrada para medir o que cada rodada de discussão muda.",
+ "verdict": "<strong>Com o mesmo número de gerações, o voto simples empata ou vence a discussão, e custa menos.</strong> No gpt-4o-mini, Self-Consistency 76,0% contra MedAgents 74,1% (p = 0,06); no gpt-5.4-nano, 79,7% contra 78,9% (p = 0,48). O SC custou US$ 3,95 contra US$ 5,17 no 4o-mini e US$ 4,46 contra US$ 9,52 no nano, porque usa de 3 a 6 vezes menos tokens. A discussão do MedAgents tem saldo nulo no gpt-4o-mini (consertou 27 respostas e estragou 28) e um saldo pequeno no gpt-5.4-nano (36 contra 17).",
+ "sections": {
+  "acc": "<p>Nos dois modelos, o Self-Consistency é o método mais preciso e o MedAgents vem logo atrás, com intervalos de confiança sobrepostos aos do SC e do CoT de 1.000 tokens. A maior distância não está entre esses três, e sim entre deixar ou não o modelo raciocinar: o gpt-5.4-nano com o raciocínio desligado responde mal de forma direta (61,1%), mas sobe para 76,0% com CoT.</p><p>Duas observações sobre o CoT. No gpt-4o-mini, o limite de 300 tokens corta o raciocínio em 278 questões, que ficam com 12% de acerto, e por isso o CoT curto rende menos que a resposta direta. No gpt-5.4-nano, o CoT de 300 e o de 1.000 tokens dão exatamente 968 acertos por coincidência: o modelo escreve cerca de 120 tokens e só 7 respostas tocaram o limite; as duas execuções discordam em 131 questões, mas os acertos se compensam.</p>",
+  "mcnemar": "<p>Contando só as questões em que os dois métodos discordam, o MedAgents vence com folga a resposta direta e o CoT de 300 tokens nos dois modelos, e no gpt-5.4-nano também o CoT de 1.000 tokens (130 a 94, p = 0,02). Contra o Self-Consistency, o placar favorece o SC nos dois modelos: 88 a 64 no gpt-4o-mini e 105 a 94 no gpt-5.4-nano. Nenhuma das duas diferenças é significativa a 5%, mas nenhuma aponta a favor do MedAgents.</p>",
+  "sc": "<p>A curva mostra quanto o voto acrescenta a uma amostra só. No gpt-4o-mini, quase nada: uma única amostra com temperatura 0,7 já acerta 74,8%, mais que o MedAgents, e 21 amostras chegam a 76,0%, com a curva praticamente plana a partir de k = 7. No gpt-5.4-nano o voto rende mais, de 76,0% para 79,7%, e a curva ainda sobe em k = 21; o SC passa o MedAgents por volta de 11 amostras.</p>",
+  "rounds": "<p>O MedAgents encerra na primeira rodada quando todos os especialistas concordam com o relatório, o que acontece em 77% das questões nos dois modelos. Essas são fáceis para todos os métodos. As que chegaram a 3 rodadas são difíceis para todos: entre 48% e 57% de acerto no gpt-4o-mini e entre 53% e 55% no nano, inclusive para os métodos que não discutem nada.</p><p>A falta de consenso entre os agentes é, portanto, um bom sinal de dificuldade, mas discutir mais não recupera o desempenho: no grupo de 3 rodadas do gpt-4o-mini, o MedAgents (48,3%) fica abaixo do SC (57,1%) e até da resposta direta (51,0%). E os dois sinais de incerteza apontam para as mesmas questões: quando 90% ou mais das amostras do SC escolhem a mesma letra, 83% das questões fecham em uma rodada nos dois modelos.</p>",
+  "dynamics": "<p>Aplicando o prompt de decisão a cada versão do relatório, dá para isolar o efeito da discussão. No gpt-4o-mini o saldo é nulo: o relatório inicial, antes de qualquer voto, já acertava 74,2%, e a resposta final acerta 74,1%. Nas 289 questões revisadas, a resposta mudou em 72: 27 foram para a certa e 28 saíram dela. As duas primeiras revisões têm saldo levemente positivo (+4 e +3); a terceira tem 1 conserto e 9 estragos. No gpt-5.4-nano a discussão ajuda um pouco, de 77,4% para 78,9%, quase tudo na primeira revisão.</p><p>A terceira revisão tem uma particularidade no código original: se ainda houver um “não” na última votação, as sugestões são incorporadas e a resposta final sai de um relatório que nenhum especialista votou. Isso aconteceu em 101 questões no gpt-4o-mini e em 110 no nano. Pelo número de “não” na primeira votação, a acurácia cai de forma regular: de 79% (gpt-4o-mini) e 85% (nano) sem nenhum “não” para cerca de 50% com dois ou mais. O gpt-5.4-nano discorda mais: em 76 questões os sete especialistas votaram “não” logo na primeira rodada.</p>",
+  "cascade": "<p>Como a concordância do SC e as rodadas do MedAgents apontam para as mesmas questões, uma combinação natural é responder com o SC e chamar o MedAgents só quando o voto hesita. O melhor limiar foi 80% nos dois modelos: 76,7% no gpt-4o-mini (+0,7 ponto sobre o SC), escalando 248 questões, e 81,4% no gpt-5.4-nano (+1,7 ponto), escalando 290, com 26 a 27 gerações por questão em média.</p><p>O ganho deve ser lido com cuidado: o limiar foi escolhido olhando estes mesmos dados, então o resultado é otimista e precisaria ser validado em outro conjunto de questões. Ele também é menor que a margem do intervalo de confiança (cerca de ±2,3 pontos).</p>",
+  "october": "<p>A execução de novembro reproduziu a de outubro quase exatamente: a resposta direta teve os mesmos 897 acertos, o CoT de 1.000 tokens foi de 958 para 959 e o MedAgents de 942 para 943. A exceção é o CoT de 300 tokens, que caiu de 860 para 815. É o método mais sensível ao corte: em 278 questões a resposta bateu no limite e, nessas, só 12% estavam certas. Pequenas variações no tamanho do texto, que a temperatura 0 não impede na API, mudam quais respostas são cortadas.</p>",
+  "cases": "<p>Duas questões do gpt-4o-mini em que a discussão mudou a resposta final, uma para melhor e outra para pior. Os enunciados e as citações foram traduzidos; votos e respostas de cada versão do relatório vêm direto dos registros da execução.</p>"
+ },
+ "cases": [
+  {
+   "model": "gpt-4o-mini",
+   "qid": 312,
+   "outcome": "good",
+   "title": "A discussão consertou a resposta",
+   "stem_pt": "Mulher de 68 anos com fadiga e dor lombar há 7 meses, sem melhora com analgésicos comuns. Exames: cálcio 11,5 mg/dL, creatinina 2,0 mg/dL, ureia (BUN) 30 mg/dL. A biópsia renal mostra grandes cilindros eosinofílicos. Qual achado é mais provável no esfregaço de sangue periférico?",
+   "options_pt": {
+    "A": "Reticulócitos abundantes",
+    "B": "Agregados lineares de hemácias",
+    "C": "Esquizócitos",
+    "D": "Leucocitose com muitas células mieloides maduras",
+    "E": "Smudge cells (células borradas)"
+   },
+   "quote": "A resposta mais adequada para os achados do esfregaço neste contexto seria ‘B: Agregados lineares de hemácias’ (formação de rouleaux).",
+   "quote_cite": "Nefrologia, revisão da 1ª rodada (tradução)",
+   "summary": "O relatório inicial já falava em mieloma múltiplo e em rouleaux, mas não dizia qual alternativa correspondia a isso; aplicado o prompt de decisão, ele levou a A. Na primeira rodada, três dos cinco especialistas votaram “não”, e a revisão da Nefrologia fez a ligação explícita entre rouleaux e a alternativa B. A partir daí, todas as versões do relatório levam a B. A mesma revisão, porém, acrescentou um erro: disse que cilindros eosinofílicos “não são típicos” do mieloma, quando a nefropatia por cilindros é justamente o achado clássico. O relatório final acertou a letra carregando uma afirmação falsa. O Self-Consistency errou esta questão: só 3 das 21 amostras escolheram B."
+  },
+  {
+   "model": "gpt-4o-mini",
+   "qid": 323,
+   "outcome": "bad",
+   "title": "Um voto isolado estragou a resposta",
+   "stem_pt": "Menino de 16 meses levado à consulta de rotina; ainda não anda. Amamentação exclusiva. Percentil 20 de comprimento, 10 de peso e 50 de perímetro cefálico. Exame: erosão do esmalte na face lingual dos incisivos, molares cariados, bossa frontal, punhos alargados, pernas arqueadas e rosário costal. Qual é a causa subjacente mais provável?",
+   "options_pt": {
+    "A": "Deficiência do cofator da prolil e lisil hidroxilase",
+    "B": "Defeito no colágeno tipo I",
+    "C": "Mineralização deficiente da placa de crescimento",
+    "D": "Reabsorção óssea deficiente mediada por osteoclastos",
+    "E": "Mutação do receptor 3 do fator de crescimento de fibroblastos"
+   },
+   "quote": "A opção ‘B: Defeito no colágeno tipo I’ deveria ser considerada com mais atenção, já que a osteogênese imperfeita se caracteriza por fragilidade óssea e alterações dentárias causadas por defeitos do colágeno.",
+   "quote_cite": "Genética, revisão da 3ª rodada (tradução)",
+   "summary": "Raquitismo clássico, e o relatório inicial disse isso. Seis dos sete especialistas votaram “sim” nas três rodadas; só a Genética votou “não” todas as vezes. Como a votação exige unanimidade, cada “não” gerou uma revisão. Nas duas primeiras, a Genética até reforçou a alternativa C. Na terceira, mudou de ideia e sugeriu osteogênese imperfeita. Essa revisão foi incorporada ao relatório depois da última votação, sem que ninguém mais a avaliasse, e a decisão final passou para B. O Self-Consistency acertou com as 21 amostras, e o CoT também."
+  }
+ ]
+}

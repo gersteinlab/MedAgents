@@ -1,0 +1,902 @@
+{
+ "gpt-4o-mini": {
+  "n": 20,
+  "rows": [
+   {
+    "key": "vote",
+    "label": "Voto dos 7 especialistas, sem debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 9.0,
+    "usd": 0.0014147175,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "full@1",
+    "label": "Completa, 1 rodada de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 16.0,
+    "usd": null,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "full@2",
+    "label": "Completa, 2 rodadas de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 23.0,
+    "usd": 0.009105434999999999,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring@1",
+    "label": "Anel, 1 rodada de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 16.0,
+    "usd": null,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring@2",
+    "label": "Anel, 2 rodadas de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 23.0,
+    "usd": 0.00654381,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring_conf@1",
+    "label": "Anel + Conformist, 1 rodada de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 9.55,
+    "usd": null,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring_conf@2",
+    "label": "Anel + Conformist, 2 rodadas de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 10.0,
+    "usd": 0.0018252975000000002,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   }
+  ],
+  "agent_acc_by_round": {
+   "full": [
+    0.7214285714285714,
+    0.7357142857142858,
+    0.75
+   ],
+   "ring": [
+    0.7214285714285714,
+    0.7214285714285714,
+    0.7357142857142858
+   ],
+   "ring_conf": [
+    0.7214285714285714,
+    0.7214285714285714,
+    0.7357142857142858
+   ]
+  },
+  "round0_unanimous": 14,
+  "references": {
+   "Self-Consistency (gpt-4o-mini)": {
+    "acc": 0.75,
+    "usd": 0.0030109575
+   },
+   "MedAgents (gpt-4o-mini)": {
+    "acc": 0.7,
+    "usd": 0.0043357050000000005
+   },
+   "CoT · 1.000 tokens (gpt-4o-mini)": {
+    "acc": 0.75,
+    "usd": 0.00016127249999999996
+   }
+  }
+ },
+ "gpt-5.4-nano": {
+  "n": 20,
+  "rows": [
+   {
+    "key": "vote",
+    "label": "Voto dos 7 especialistas, sem debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 9.0,
+    "usd": 0.0017647025000000003,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "full@1",
+    "label": "Completa, 1 rodada de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 16.0,
+    "usd": null,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "full@2",
+    "label": "Completa, 2 rodadas de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 23.0,
+    "usd": 0.008084770000000002,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring@1",
+    "label": "Anel, 1 rodada de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 16.0,
+    "usd": null,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring@2",
+    "label": "Anel, 2 rodadas de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 23.0,
+    "usd": 0.0061712125,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring_conf@1",
+    "label": "Anel + Conformist, 1 rodada de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 9.6,
+    "usd": null,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring_conf@2",
+    "label": "Anel + Conformist, 2 rodadas de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 10.0,
+    "usd": 0.0021339525,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     }
+    }
+   }
+  ],
+  "agent_acc_by_round": {
+   "full": [
+    0.7357142857142858,
+    0.7428571428571429,
+    0.75
+   ],
+   "ring": [
+    0.7357142857142858,
+    0.7642857142857142,
+    0.7785714285714286
+   ],
+   "ring_conf": [
+    0.7357142857142858,
+    0.7642857142857142,
+    0.7642857142857142
+   ]
+  },
+  "round0_unanimous": 13,
+  "references": {
+   "Self-Consistency (gpt-5.4-nano)": {
+    "acc": 0.75,
+    "usd": 0.0032853099999999996
+   },
+   "MedAgents (gpt-5.4-nano)": {
+    "acc": 0.8,
+    "usd": 0.007170855000000001
+   },
+   "CoT · 1.000 tokens (gpt-5.4-nano)": {
+    "acc": 0.8,
+    "usd": 0.00020233250000000006
+   }
+  }
+ },
+ "hetero: gpt-4o-mini+gpt-5.4-nano": {
+  "n": 20,
+  "rows": [
+   {
+    "key": "vote",
+    "label": "Voto dos 7 especialistas, sem debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 9.0,
+    "usd": 0.0015196250000000004,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 2,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "full@1",
+    "label": "Completa, 1 rodada de debate",
+    "correct": 16,
+    "n": 20,
+    "acc": 0.8,
+    "ci": [
+     0.5839782779742401,
+     0.9193436467288
+    ],
+    "calls": 16.0,
+    "usd": null,
+    "fixed_vs_vote": 1,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 2,
+      "only_ref": 1,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 1,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 1,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "full@2",
+    "label": "Completa, 2 rodadas de debate",
+    "correct": 17,
+    "n": 20,
+    "acc": 0.85,
+    "ci": [
+     0.6395767041130426,
+     0.9476322080405041
+    ],
+    "calls": 23.0,
+    "usd": 0.0087732075,
+    "fixed_vs_vote": 2,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 3,
+      "only_ref": 0,
+      "p": 0.25
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring@1",
+    "label": "Anel, 1 rodada de debate",
+    "correct": 17,
+    "n": 20,
+    "acc": 0.85,
+    "ci": [
+     0.6395767041130426,
+     0.9476322080405041
+    ],
+    "calls": 16.0,
+    "usd": null,
+    "fixed_vs_vote": 2,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 3,
+      "only_ref": 0,
+      "p": 0.25
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring@2",
+    "label": "Anel, 2 rodadas de debate",
+    "correct": 17,
+    "n": 20,
+    "acc": 0.85,
+    "ci": [
+     0.6395767041130426,
+     0.9476322080405041
+    ],
+    "calls": 23.0,
+    "usd": 0.006350882499999999,
+    "fixed_vs_vote": 2,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 3,
+      "only_ref": 0,
+      "p": 0.25
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 2,
+      "only_ref": 0,
+      "p": 0.5
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring_conf@1",
+    "label": "Anel + Conformist, 1 rodada de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 9.9,
+    "usd": null,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 2,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     }
+    }
+   },
+   {
+    "key": "ring_conf@2",
+    "label": "Anel + Conformist, 2 rodadas de debate",
+    "correct": 15,
+    "n": 20,
+    "acc": 0.75,
+    "ci": [
+     0.5312949900419365,
+     0.888139947210597
+    ],
+    "calls": 10.6,
+    "usd": 0.0021471125000000002,
+    "fixed_vs_vote": 0,
+    "broke_vs_vote": 0,
+    "vs": {
+     "Self-Consistency (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "MedAgents (gpt-4o-mini)": {
+      "only_this": 1,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-4o-mini)": {
+      "only_this": 0,
+      "only_ref": 0,
+      "p": 1.0
+     },
+     "Self-Consistency (gpt-5.4-nano)": {
+      "only_this": 2,
+      "only_ref": 2,
+      "p": 1.0
+     },
+     "MedAgents (gpt-5.4-nano)": {
+      "only_this": 0,
+      "only_ref": 1,
+      "p": 1.0
+     },
+     "CoT · 1.000 tokens (gpt-5.4-nano)": {
+      "only_this": 1,
+      "only_ref": 2,
+      "p": 1.0
+     }
+    }
+   }
+  ],
+  "agent_acc_by_round": {
+   "full": [
+    0.7571428571428571,
+    0.7928571428571428,
+    0.8
+   ],
+   "ring": [
+    0.7571428571428571,
+    0.7857142857142857,
+    0.7928571428571428
+   ],
+   "ring_conf": [
+    0.7571428571428571,
+    0.7642857142857142,
+    0.7571428571428571
+   ]
+  },
+  "round0_unanimous": 11,
+  "references": {
+   "Self-Consistency (gpt-4o-mini)": {
+    "acc": 0.75,
+    "usd": 0.0030109575
+   },
+   "MedAgents (gpt-4o-mini)": {
+    "acc": 0.7,
+    "usd": 0.0043357050000000005
+   },
+   "CoT · 1.000 tokens (gpt-4o-mini)": {
+    "acc": 0.75,
+    "usd": 0.00016127249999999996
+   },
+   "Self-Consistency (gpt-5.4-nano)": {
+    "acc": 0.75,
+    "usd": 0.0032853099999999996
+   },
+   "MedAgents (gpt-5.4-nano)": {
+    "acc": 0.8,
+    "usd": 0.007170855000000001
+   },
+   "CoT · 1.000 tokens (gpt-5.4-nano)": {
+    "acc": 0.8,
+    "usd": 0.00020233250000000006
+   }
+  }
+ }
+}

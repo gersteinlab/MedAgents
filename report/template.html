@@ -1,0 +1,704 @@
+<title>MedAgents contra Self-Consistency</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: case-conference report, second installment of "MedAgents no MedQA". ~68ch reading column; figures break out
+   to a wider frame and repeat once per model as small multiples. Teal = MedAgents, rust = Self-Consistency. */
+:root {
+  --paper: #f3f6f5;
+  --surface: #fbfcfc;
+  --ink: #0f1c1a;
+  --ink-2: #485754;
+  --muted: #74817e;
+  --rule: #d6dfdc;
+  --accent: #0b7462;
+  --accent-soft: #d5ebe5;
+  --other: #a8541b;
+  --other-soft: #f3e1d3;
+  --yes: #0b7462;
+  --no: #b0372f;
+  --no-soft: #f6dcd9;
+  --code-bg: #e8eeec;
+  --neutral-1: #b9c6c2;
+  --neutral-2: #e2e8e6;
+
+  --f-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-data: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --step--1: 0.8125rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-3: 2.25rem;
+  --step-4: clamp(2.5rem, 6vw, 3.75rem);
+  --col: 68ch;
+  --wide: 1040px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0e1514; --surface: #141d1c; --ink: #e4ecea; --ink-2: #a7b5b2; --muted: #82908d; --rule: #26322f;
+    --accent: #3fb39c; --accent-soft: #173a33; --other: #e08a4a; --other-soft: #3b2718;
+    --yes: #3fb39c; --no: #ec7a70; --no-soft: #3e1f1c; --code-bg: #1b2725; --neutral-1: #4a5956; --neutral-2: #253230;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0e1514; --surface: #141d1c; --ink: #e4ecea; --ink-2: #a7b5b2; --muted: #82908d; --rule: #26322f;
+  --accent: #3fb39c; --accent-soft: #173a33; --other: #e08a4a; --other-soft: #3b2718;
+  --yes: #3fb39c; --no: #ec7a70; --no-soft: #3e1f1c; --code-bg: #1b2725; --neutral-1: #4a5956; --neutral-2: #253230;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: var(--step-0); line-height: 1.6; }
+.page {
+  max-width: var(--wide); margin: 0 auto;
+  padding-block: 3.5rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 4rem;
+}
+.prose { max-width: var(--col); display: flex; flex-direction: column; gap: 1rem; }
+.prose ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: var(--step-4); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: var(--step-3); font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: var(--step-1); font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); }
+code, pre { font-family: var(--f-data); font-size: 0.875em; }
+code { background: var(--code-bg); padding: 0.05em 0.3em; border-radius: 3px; }
+pre { background: var(--code-bg); padding: 1rem; border-radius: 6px; overflow-x: auto; line-height: 1.55; margin: 0; }
+pre code { background: none; padding: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.label { font-family: var(--f-data); font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+header { display: flex; flex-direction: column; gap: 1.25rem; }
+.lede { font-size: var(--step-1); color: var(--ink-2); max-width: 60ch; line-height: 1.5; }
+.verdict { font-family: var(--f-display); font-size: var(--step-1); font-weight: 600; max-width: 54ch; border-left: 3px solid var(--accent); padding-left: 1rem; }
+.prev { font-family: var(--f-data); font-size: var(--step--1); color: var(--muted); }
+
+section { display: flex; flex-direction: column; gap: 1.5rem; }
+.section-head { display: flex; flex-direction: column; gap: 0.5rem; max-width: var(--col); }
+.section-head .prose { gap: 0.75rem; }
+.figure { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; margin: 0; min-width: 0; }
+.figure-title { font-family: var(--f-display); font-weight: 600; font-size: var(--step-0); }
+.figure-note { font-size: var(--step--1); color: var(--muted); font-family: var(--f-data); line-height: 1.5; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.6rem 1.25rem; font-family: var(--f-data); font-size: var(--step--1); color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 0.5rem; }
+.swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; flex: none; }
+.multiples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2rem; }
+.multiples.stack { grid-template-columns: 1fr; }
+@media (max-width: 860px) { .multiples { grid-template-columns: 1fr; } }
+.panel { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
+.panel-title { font-family: var(--f-data); font-size: var(--step--1); font-weight: 600; color: var(--ink); letter-spacing: 0.02em; }
+
+/* scoreboard */
+.scoreboard { overflow-x: auto; border-top: 1px solid var(--ink); }
+.scoreboard table { min-width: 34rem; }
+.scoreboard td.pct { font-family: var(--f-data); font-size: var(--step-1); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.scoreboard tr.is-mc td, .scoreboard tr.is-mc td.pct { color: var(--accent); }
+.scoreboard tr.is-sc td, .scoreboard tr.is-sc td.pct { color: var(--other); }
+.best { font-family: var(--f-data); font-size: 0.6875rem; border: 1px solid currentColor; border-radius: 3px; padding: 0 0.3rem; margin-left: 0.4rem; vertical-align: 0.15em; font-weight: 500; }
+
+/* HTML charts positioned by percentage */
+.chart { display: flex; flex-direction: column; gap: 0.25rem; }
+.row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 4.5rem; align-items: center; gap: 0.75rem; min-height: 2.75rem; }
+.row .rname { font-family: var(--f-display); font-weight: 600; font-size: 0.9375rem; line-height: 1.25; }
+.row .rname small { display: block; font-family: var(--f-data); font-weight: 400; font-size: 0.75rem; color: var(--muted); }
+.row .rval { font-family: var(--f-data); font-variant-numeric: tabular-nums; font-size: 0.9375rem; text-align: right; }
+.row.is-mc .rname, .row.is-mc .rval { color: var(--accent); }
+.row.is-sc .rname, .row.is-sc .rval { color: var(--other); }
+.track { position: relative; height: 2.75rem; }
+.grid-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--rule); }
+.axis { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 4.5rem; gap: 0.75rem; }
+.axis .ticks { position: relative; height: 1.25rem; }
+.axis .tick { position: absolute; transform: translateX(-50%); font-family: var(--f-data); font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.whisker { position: absolute; top: 50%; height: 2px; transform: translateY(-50%); background: var(--muted); }
+.whisker::before, .whisker::after { content: ""; position: absolute; top: -5px; width: 2px; height: 12px; background: inherit; }
+.whisker::before { left: 0; } .whisker::after { right: 0; }
+.dot { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%); background: var(--ink-2); box-shadow: 0 0 0 2px var(--surface); }
+.row.is-mc .dot, .row.is-mc .whisker { background: var(--accent); }
+.row.is-sc .dot, .row.is-sc .whisker { background: var(--other); }
+.mk { position: absolute; top: 50%; width: 13px; height: 13px; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px var(--surface); }
+.mk.ma { border-radius: 50%; background: var(--accent); z-index: 4; }
+.mk.sc { background: var(--other); transform: translate(-50%, -50%) rotate(45deg); width: 11px; height: 11px; z-index: 3; }
+.mk.cot { background: var(--ink-2); width: 10px; height: 10px; z-index: 2; }
+.mk.dir { border-radius: 50%; background: var(--surface); border: 2px solid var(--muted); z-index: 1; }
+.lg-mk { position: relative; display: inline-block; width: 14px; height: 14px; }
+.lg-mk .mk { left: 50%; box-shadow: none; }
+
+.bar { position: absolute; top: 50%; height: 14px; transform: translateY(-50%); background: var(--accent); border-radius: 0 4px 4px 0; }
+.bar.left { background: var(--other); border-radius: 4px 0 0 4px; }
+.bar.alt { background: var(--other); }
+.bar.neutral { background: var(--neutral-1); }
+.center-axis { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: var(--ink-2); }
+.bar-count { position: absolute; top: 50%; transform: translateY(-50%); font-family: var(--f-data); font-size: 0.75rem; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ref-line { position: absolute; top: -0.25rem; bottom: -0.25rem; width: 0; border-left: 2px dashed var(--ink-2); }
+.mcn .row, .mcn .axis { grid-template-columns: 9.5rem minmax(0, 1fr) 5.5rem; }
+.pval { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+.pval small { font-family: var(--f-data); font-size: 0.6875rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.sig { font-family: var(--f-data); font-size: 0.6875rem; padding: 0.1rem 0.4rem; border-radius: 3px; margin-top: 0.2rem; white-space: nowrap; }
+.sig.yes { background: var(--accent-soft); color: var(--ink); }
+.sig.yes.against { background: var(--other-soft); }
+.sig.no { background: var(--code-bg); color: var(--ink-2); }
+
+/* stacked transitions */
+.stack-track { position: relative; height: 1.5rem; display: flex; border-radius: 3px; overflow: hidden; background: var(--neutral-2); }
+.seg { height: 100%; }
+.seg.keep-ok { background: var(--neutral-1); }
+.seg.keep-bad { background: var(--neutral-2); }
+.seg.fix { background: var(--accent); }
+.seg.break { background: var(--no); }
+.seg.swap { background: var(--muted); }
+.headline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.headline div { display: flex; flex-direction: column; gap: 0.15rem; }
+.headline b { font-family: var(--f-data); font-size: var(--step-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+.headline span { font-family: var(--f-data); font-size: 0.75rem; color: var(--muted); line-height: 1.3; }
+
+/* SVG */
+svg.line { width: 100%; height: auto; display: block; overflow: visible; }
+svg text { font-family: var(--f-data); font-size: 11px; fill: var(--muted); }
+svg .lbl { fill: var(--ink-2); font-size: 11px; }
+svg .lbl.ma { fill: var(--accent); }
+svg .lbl.sc { fill: var(--other); }
+
+/* tables */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+th, td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--f-data); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; vertical-align: bottom; }
+td.n, th.n { text-align: right; font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td:first-child, th:first-child { padding-left: 0; }
+tr.is-mc td { color: var(--accent); font-weight: 600; }
+tr.is-sc td { color: var(--other); font-weight: 600; }
+tr.hl td { background: var(--accent-soft); }
+.delta-up { color: var(--accent); }
+.delta-down { color: var(--no); }
+
+/* cases */
+.cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; align-items: start; }
+@media (max-width: 860px) { .cases { grid-template-columns: 1fr; } }
+.case { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+.case-head { display: flex; flex-direction: column; gap: 0.4rem; }
+.outcome { align-self: flex-start; font-family: var(--f-data); font-size: var(--step--1); font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 3px; }
+.outcome.good { background: var(--accent-soft); color: var(--ink); }
+.outcome.bad { background: var(--no-soft); color: var(--ink); }
+.stem { font-size: 0.9375rem; color: var(--ink-2); line-height: 1.55; }
+.options { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.9375rem; }
+.options li { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto; gap: 0.5rem; align-items: baseline; padding: 0.3rem 0.5rem; border-radius: 4px; }
+.options .letter { font-family: var(--f-data); font-weight: 600; color: var(--muted); }
+.options .tags { display: flex; gap: 0.3rem; flex-wrap: wrap; justify-content: flex-end; }
+.options li.gold { background: var(--accent-soft); }
+.tag { font-family: var(--f-data); font-size: 0.6875rem; padding: 0.05rem 0.4rem; border-radius: 3px; border: 1px solid var(--rule); color: var(--ink-2); white-space: nowrap; background: var(--surface); }
+.tag.gold { border-color: var(--accent); color: var(--accent); }
+.tag.wrong { border-color: var(--no); color: var(--no); }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-family: var(--f-data); font-size: 0.8125rem; }
+.chain .v { padding: 0.15rem 0.45rem; border-radius: 3px; border: 1px solid var(--rule); }
+.chain .v.ok { background: var(--accent-soft); border-color: var(--accent); }
+.chain .v.bad { background: var(--no-soft); border-color: var(--no); }
+.chain .arrow { color: var(--muted); }
+.ballot { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
+.ballot th, .ballot td { border-bottom: 1px solid var(--rule); padding: 0.4rem 0.5rem; text-align: center; }
+.ballot th:first-child, .ballot td:first-child { text-align: left; }
+.ballot td:first-child { font-family: var(--f-display); font-weight: 500; }
+.vote { display: inline-block; min-width: 2.6rem; font-family: var(--f-data); font-size: 0.75rem; font-weight: 600; padding: 0.1rem 0.35rem; border-radius: 3px; }
+.vote.yes { color: var(--yes); background: var(--accent-soft); }
+.vote.no { color: var(--no); background: var(--no-soft); }
+.vote.none { color: var(--muted); }
+blockquote { margin: 0; padding: 0.75rem 1rem; border-left: 3px solid var(--rule); background: var(--paper); border-radius: 0 4px 4px 0; display: flex; flex-direction: column; gap: 0.4rem; }
+blockquote p { font-style: italic; font-size: 0.9375rem; line-height: 1.5; }
+blockquote cite { font-style: normal; font-family: var(--f-data); font-size: 0.75rem; color: var(--muted); }
+.case-text { font-size: 0.9375rem; line-height: 1.55; }
+
+.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.5rem; }
+@media (max-width: 760px) { .notes { grid-template-columns: 1fr; } }
+.notes > * { min-width: 0; }
+footer { border-top: 1px solid var(--rule); padding-top: 1.25rem; font-size: var(--step--1); color: var(--muted); font-family: var(--f-data); line-height: 1.6; }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: var(--paper); font-family: var(--f-data); font-size: 0.75rem; line-height: 1.45; padding: 0.45rem 0.6rem; border-radius: 4px; max-width: 18rem; }
+@media (max-width: 560px) {
+  .row, .axis, .mcn .row, .mcn .axis { grid-template-columns: minmax(0, 1fr) 4.5rem; }
+  .row .rname { grid-column: 1 / -1; padding-top: 0.5rem; }
+  .axis > :first-child { display: none; }
+  .mcn .row, .mcn .axis { grid-template-columns: minmax(0, 1fr) 5rem; }
+  .headline { grid-template-columns: 1fr 1fr; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <span class="label">Sistemas multiagentes · reprodução experimental, 2ª parte</span>
+    <h1>MedAgents contra Self-Consistency</h1>
+    <p class="lede" id="lede"></p>
+    <p class="verdict" id="verdict"></p>
+    <div class="scoreboard"><table><thead id="sb-head"></thead><tbody id="sb-body"></tbody></table></div>
+    <p class="prev">Primeira parte, com a execução de outubro de 2026: <a href="https://claude.ai/artifact/2bcRN8TtUwtG4CGsGp6LB9">MedAgents no MedQA</a> · Código e material: <a href="https://claude.ai/artifact/JZfAaMwbtudi2CwiZvh5nu">Pacote de reprodução</a></p>
+  </header>
+
+  <section aria-labelledby="h-acc">
+    <div class="section-head">
+      <span class="label">Resultado principal</span>
+      <h2 id="h-acc">Acurácia nas 1.273 questões</h2>
+      <div class="prose" data-text="acc"></div>
+    </div>
+    <figure class="figure">
+      <div class="figure-title">Acurácia no conjunto de teste do MedQA, com IC 95%</div>
+      <div class="multiples stack" id="acc-charts"></div>
+      <div class="table-wrap"><table><thead><tr><th>Modelo</th><th>Método</th><th class="n">Acertos</th><th class="n">Geral</th><th class="n">Step 1</th><th class="n">Step 2&amp;3</th><th class="n">Gerações / questão</th><th class="n">US$ / 1.000 questões</th></tr></thead><tbody id="acc-table"></tbody></table></div>
+      <p class="figure-note">IC de Wilson. Step 1 cobre ciências básicas; Step 2&amp;3, conduta clínica. Custo estimado com os tokens registrados em cada questão e o preço oficial do modelo, sem o desconto de entrada em cache. O Self-Consistency faz 21 gerações em 3 chamadas à API.</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-mcn">
+    <div class="section-head">
+      <span class="label">Comparação pareada</span>
+      <h2 id="h-mcn">Questão a questão, contra o MedAgents</h2>
+      <div class="prose" data-text="mcnemar"></div>
+    </div>
+    <figure class="figure mcn">
+      <div class="figure-title">Questões em que só um dos dois métodos acertou</div>
+      <div class="legend"><span><i class="swatch" style="background:var(--other)"></i>Só o outro método acertou</span><span><i class="swatch" style="background:var(--accent)"></i>Só o MedAgents acertou</span></div>
+      <div class="multiples stack" id="mcn-charts"></div>
+      <p class="figure-note">Teste de McNemar exato, bilateral. Abaixo de p = 0,05, a diferença é considerada significativa.</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-sc">
+    <div class="section-head">
+      <span class="label">Self-Consistency</span>
+      <h2 id="h-sc">Quantas amostras o voto precisa</h2>
+      <div class="prose" data-text="sc"></div>
+    </div>
+    <figure class="figure">
+      <div class="figure-title">Acurácia do voto majoritário pelo número de amostras</div>
+      <div class="legend"><span><i class="swatch" style="background:var(--other)"></i>Self-Consistency com k amostras</span><span><i class="swatch" style="background:var(--accent)"></i>MedAgents</span><span><i class="swatch" style="background:var(--ink-2)"></i>CoT · 1.000 tokens (uma geração, temperatura 0)</span></div>
+      <div class="multiples" id="sc-charts"></div>
+      <p class="figure-note">Para cada k, média de 200 sorteios de k amostras entre as 21 gravadas por questão. O ponto final (k = 21) usa todas. Temperatura 0,7, limite de 1.000 tokens, empate resolvido pela letra que apareceu primeiro.</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-rounds">
+    <div class="section-head">
+      <span class="label">Análise por rodadas</span>
+      <h2 id="h-rounds">As questões difíceis são difíceis para todos?</h2>
+      <div class="prose" data-text="rounds"></div>
+    </div>
+    <figure class="figure">
+      <div class="figure-title">Acurácia de cada método, separando as questões pelo número de rodadas que o MedAgents precisou</div>
+      <div class="legend">
+        <span><span class="lg-mk"><i class="mk ma"></i></span>MedAgents</span>
+        <span><span class="lg-mk"><i class="mk sc"></i></span>Self-Consistency</span>
+        <span><span class="lg-mk"><i class="mk cot"></i></span>CoT · 1.000 tokens</span>
+        <span><span class="lg-mk"><i class="mk dir"></i></span>Resposta direta</span>
+      </div>
+      <div class="multiples stack" id="rounds-charts"></div>
+      <p class="figure-note">Os grupos vêm do MedAgents; os outros métodos não têm rodadas, só são avaliados nas mesmas questões. Número à direita: acurácia do MedAgents no grupo.</p>
+    </figure>
+    <figure class="figure">
+      <div class="figure-title">Os dois sinais de incerteza apontam para as mesmas questões?</div>
+      <div class="multiples" id="agree-tables"></div>
+      <p class="figure-note">Concordância do SC: fração das 21 amostras que votaram na letra vencedora. Rodadas: quantas votações o MedAgents fez naquela questão.</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-dyn">
+    <div class="section-head">
+      <span class="label">Dentro da discussão</span>
+      <h2 id="h-dyn">O que cada revisão faz com a resposta</h2>
+      <div class="prose" data-text="dynamics"></div>
+    </div>
+    <figure class="figure">
+      <div class="figure-title">Resposta do relatório antes e depois de cada revisão</div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i>Errada → certa</span>
+        <span><i class="swatch" style="background:var(--no)"></i>Certa → errada</span>
+        <span><i class="swatch" style="background:var(--muted)"></i>Errada → outra errada</span>
+        <span><i class="swatch" style="background:var(--neutral-1)"></i>Continuou certa</span>
+        <span><i class="swatch" style="background:var(--neutral-2);outline:1px solid var(--rule)"></i>Continuou errada</span>
+      </div>
+      <div class="multiples" id="dyn-charts"></div>
+      <p class="figure-note">Para cada versão do relatório, o mesmo prompt de decisão final foi aplicado para saber qual alternativa ela levaria a escolher. v0 é o relatório sintetizado antes de qualquer votação. Essas chamadas extras não entram no custo do método.</p>
+    </figure>
+    <figure class="figure">
+      <div class="figure-title">Acurácia final pelo número de especialistas que votaram “não” na primeira rodada</div>
+      <div class="multiples" id="votes-charts"></div>
+      <p class="figure-note">São 7 especialistas por questão (5 escolhidos pelo enunciado, 2 pelas alternativas). Grupos com menos de 10 questões não aparecem.</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-casc">
+    <div class="section-head">
+      <span class="label">Custo e benefício</span>
+      <h2 id="h-casc">E se o MedAgents só fosse chamado quando o voto hesita?</h2>
+      <div class="prose" data-text="cascade"></div>
+    </div>
+    <figure class="figure">
+      <div class="figure-title">Responder com o Self-Consistency e escalar para o MedAgents abaixo de um limiar de concordância</div>
+      <div class="multiples" id="casc-tables"></div>
+      <p class="figure-note">Simulação feita com as respostas já gravadas, sem chamadas novas. Gerações por questão: as 21 do SC em todas, mais as do MedAgents nas escaladas.</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-oct" id="sec-oct">
+    <div class="section-head">
+      <span class="label">Reprodutibilidade</span>
+      <h2 id="h-oct">A execução de outubro se repetiu?</h2>
+      <div class="prose" data-text="october"></div>
+    </div>
+    <figure class="figure">
+      <div class="figure-title">gpt-4o-mini, mesmos prompts e mesmas questões, em duas execuções</div>
+      <div class="table-wrap"><table><thead><tr><th>Método</th><th class="n">Outubro</th><th class="n">Novembro</th><th class="n">Diferença</th></tr></thead><tbody id="oct-table"></tbody></table></div>
+      <p class="figure-note">Os arquivos de saída de outubro não existem mais; os números de outubro vêm do relatório publicado. Temperatura 0 não garante respostas idênticas na API da OpenAI.</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-cases" id="sec-cases">
+    <div class="section-head">
+      <span class="label">Casos reais da execução</span>
+      <h2 id="h-cases">A discussão por dentro</h2>
+      <div class="prose" data-text="cases"></div>
+    </div>
+    <div class="cases" id="cases"></div>
+  </section>
+
+  <section aria-labelledby="h-notes">
+    <div class="section-head">
+      <span class="label">Para citar no trabalho</span>
+      <h2 id="h-notes">Configuração</h2>
+    </div>
+    <div class="notes">
+      <div class="prose">
+        <h3>Modelos e métodos</h3>
+        <ul>
+          <li><strong>gpt-4o-mini</strong>, o mesmo da primeira parte, e <strong>gpt-5.4-nano</strong> com o raciocínio desligado (<code>reasoning_effort="none"</code>). Assim ele aceita temperatura e várias amostras, como o 4o-mini. O gpt-4.1-nano, previsto no início, foi descontinuado pela OpenAI.</li>
+          <li><strong>Temperatura 0</strong> em todos os métodos, exceto as amostras do Self-Consistency (0,7).</li>
+          <li><strong>Self-Consistency:</strong> o mesmo prompt do CoT, 21 amostras, voto majoritário. 21 gerações igualam aproximadamente o número de chamadas do MedAgents.</li>
+          <li><strong>MedAgents:</strong> código e prompts do repositório original, no máximo 3 rodadas de votação.</li>
+          <li><strong>Falhas de API:</strong> até 5 tentativas por chamada; questão cuja resposta final falhou é refeita, nunca contada como erro do método.</li>
+        </ul>
+      </div>
+      <div class="prose">
+        <h3>Como reproduzir</h3>
+<pre><code>.\run_experiments.ps1
+.\.venv\Scripts\python.exe analyze.py
+.\.venv\Scripts\python.exe report\build_report.py</code></pre>
+        <p>As saídas ficam em <code>outputs\MedQA\&lt;modelo&gt;\</code>, uma linha JSON por questão, com as respostas de cada amostra e de cada versão do relatório. Detalhes das mudanças no código: <a href="https://claude.ai/artifact/JZfAaMwbtudi2CwiZvh5nu">Pacote de reprodução</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer id="footer">Dados: MedQA (USMLE), conjunto de teste em inglês, 1.273 questões com 5 alternativas · Framework: github.com/gersteinlab/MedAgents · Self-Consistency: Wang et al., 2023 · Execução em novembro de 2026</footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const TEXT = /*__TEXT__*/null || {};
+const N = 1273;
+const ORDER = ['base_direct', 'base_cot', 'base_cot-cot1000', 'base_sc', 'syn_verif'];
+const SHORT = { 'base_direct': 'Resposta direta', 'base_cot': 'CoT · 300 tokens', 'base_cot-cot1000': 'CoT · 1.000 tokens', 'base_sc': 'Self-Consistency', 'syn_verif': 'MedAgents' };
+const MODELS = Object.keys(DATA.models);
+const OCTOBER = { 'base_direct': 897, 'base_cot': 860, 'base_cot-cot1000': 958, 'syn_verif': 942 };
+const SPECIALTY_PT = { 'Nephrology': 'Nefrologia', 'Hematology': 'Hematologia', 'Oncology': 'Oncologia', 'Geriatrics': 'Geriatria', 'Internal Medicine': 'Clínica médica', 'Neurology': 'Neurologia', 'Radiology': 'Radiologia', 'Emergency Medicine': 'Medicina de emergência', 'Neurosurgery': 'Neurocirurgia', 'Cardiology': 'Cardiologia', 'Pharmacology': 'Farmacologia', 'Pathology': 'Patologia', 'Pediatrics': 'Pediatria', 'Obstetrics and Gynecology': 'Ginecologia e obstetrícia', 'Infectious Disease': 'Infectologia', 'Infectious Diseases': 'Infectologia', 'Endocrinology': 'Endocrinologia', 'Gastroenterology': 'Gastroenterologia', 'Psychiatry': 'Psiquiatria', 'Pulmonology': 'Pneumologia', 'Dermatology': 'Dermatologia', 'Rheumatology': 'Reumatologia', 'Genetics': 'Genética', 'Immunology': 'Imunologia', 'Microbiology': 'Microbiologia', 'Surgery': 'Cirurgia', 'General Surgery': 'Cirurgia geral', 'Urology': 'Urologia', 'Ophthalmology': 'Oftalmologia', 'Family Medicine': 'Medicina de família', 'Medical Ethics': 'Ética médica', 'Physiology': 'Fisiologia', 'Biochemistry': 'Bioquímica', 'Anatomy': 'Anatomia', 'Toxicology': 'Toxicologia', 'Critical Care Medicine': 'Terapia intensiva', 'Anesthesiology': 'Anestesiologia', 'Primary Care': 'Atenção primária', 'Otolaryngology': 'Otorrinolaringologia', 'Orthopedics': 'Ortopedia', 'Nutrition': 'Nutrição', 'Dentistry': 'Odontologia', 'Pediatric Nutrition': 'Nutrição pediátrica', 'Pediatric Orthopedics': 'Ortopedia pediátrica', 'Orthopedic Surgery': 'Cirurgia ortopédica', 'Obstetrics': 'Obstetrícia', 'Gynecology': 'Ginecologia', 'Neonatology': 'Neonatologia', 'Epidemiology': 'Epidemiologia', 'Biostatistics': 'Bioestatística', 'Nephrology and Urology': 'Nefrologia e urologia', 'Vascular Surgery': 'Cirurgia vascular', 'Cardiothoracic Surgery': 'Cirurgia cardiotorácica', 'Allergy and Immunology': 'Alergia e imunologia', 'Sports Medicine': 'Medicina esportiva', 'Public Health': 'Saúde pública' };
+
+const pct = (x, d = 1) => x == null ? '—' : (x * 100).toFixed(d).replace('.', ',') + '%';
+const num = (x, d = 1) => x == null ? '—' : x.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const int = x => x.toLocaleString('pt-BR');
+const fmtP = p => p < 0.001 ? '< 0,001' : p.toFixed(p < 0.01 ? 3 : 2).replace('.', ',');
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const rowCls = k => k === 'syn_verif' ? ' is-mc' : k === 'base_sc' ? ' is-sc' : '';
+const accOf = (m, k) => (DATA.models[m].accuracy.find(a => a.key === k) || {});
+const scale = (lo, hi) => v => ((v - lo) / (hi - lo)) * 100;
+const axisRow = (ticks, fmt, pos, cls = 'axis') => { const a = el('div', cls), t = el('div', 'ticks'); for (const v of ticks) { const k = el('span', 'tick', fmt(v)); k.style.left = pos(v) + '%'; t.append(k); } a.append(el('span'), t, el('span')); return a; };
+
+/* textos */
+document.getElementById('lede').innerHTML = TEXT.lede || '';
+document.getElementById('verdict').innerHTML = TEXT.verdict || '';
+if (!TEXT.verdict) document.getElementById('verdict').hidden = true;
+document.querySelectorAll('[data-text]').forEach(e => { const t = (TEXT.sections || {})[e.dataset.text]; if (t) e.innerHTML = t; else e.hidden = true; });
+
+/* placar */
+{
+  const head = document.getElementById('sb-head'), body = document.getElementById('sb-body');
+  head.innerHTML = '<tr><th>Método</th>' + MODELS.map(m => `<th class="n">${m}</th>`).join('') + '<th class="n">Gerações / questão</th></tr>';
+  const best = Object.fromEntries(MODELS.map(m => [m, Math.max(...DATA.models[m].accuracy.map(a => a.acc))]));
+  for (const k of ORDER) {
+    if (!MODELS.some(m => accOf(m, k).acc != null)) continue;
+    const tr = el('tr', rowCls(k).trim());
+    const gens = accOf(MODELS[0], k).mean_generations;
+    tr.innerHTML = `<td>${SHORT[k]}</td>` + MODELS.map(m => { const a = accOf(m, k).acc; return `<td class="pct">${pct(a)}${a === best[m] ? '<span class="best">melhor</span>' : ''}</td>`; }).join('')
+      + `<td class="n">${k === 'syn_verif' ? MODELS.map(m => num(accOf(m, k).mean_generations)).join(' / ') : num(gens, 0)}</td>`;
+    body.append(tr);
+  }
+}
+
+/* acurácia com IC */
+{
+  const all = MODELS.flatMap(m => DATA.models[m].accuracy.flatMap(a => a.ci));
+  const LO = Math.floor(Math.min(...all) * 20) / 20, HI = Math.ceil(Math.max(...all) * 20) / 20;
+  const x = scale(LO, HI), ticks = []; for (let t = LO; t <= HI + 1e-9; t += 0.05) ticks.push(t);
+  const host = document.getElementById('acc-charts'), tbody = document.getElementById('acc-table');
+  for (const m of MODELS) {
+    const panel = el('div', 'panel'); panel.append(el('div', 'panel-title', m));
+    const chart = el('div', 'chart');
+    for (const a of DATA.models[m].accuracy) {
+      const row = el('div', 'row' + rowCls(a.key)), track = el('div', 'track');
+      for (const t of ticks) { const g = el('div', 'grid-line'); g.style.left = x(t) + '%'; track.append(g); }
+      const w = el('div', 'whisker'); w.style.left = x(a.ci[0]) + '%'; w.style.width = (x(a.ci[1]) - x(a.ci[0])) + '%';
+      const d = el('div', 'dot'); d.style.left = x(a.acc) + '%'; d.tabIndex = 0;
+      d.dataset.tip = `${m} · ${SHORT[a.key]}\n${int(a.correct)} de ${int(a.n)} corretas (${pct(a.acc)})\nIC 95%: ${pct(a.ci[0])} a ${pct(a.ci[1])}`;
+      track.append(w, d);
+      row.append(el('span', 'rname', SHORT[a.key]), track, el('span', 'rval', pct(a.acc)));
+      chart.append(row);
+      const tr = el('tr', rowCls(a.key).trim());
+      tr.innerHTML = `<td>${m}</td><td>${SHORT[a.key]}</td><td class="n">${int(a.correct)}${a.n !== N ? ' / ' + int(a.n) : ''}</td><td class="n">${pct(a.acc)}</td><td class="n">${pct(a.step1)}</td><td class="n">${pct(a.step23)}</td><td class="n">${num(a.mean_generations)}</td><td class="n">${a.usd_per_question == null ? '—' : num(a.usd_per_question * 1000, 2)}</td>`;
+      tbody.append(tr);
+    }
+    chart.append(axisRow(ticks, t => Math.round(t * 100) + '%', x));
+    panel.append(chart); host.append(panel);
+  }
+}
+
+/* McNemar */
+{
+  const host = document.getElementById('mcn-charts');
+  const MAXC = Math.ceil(Math.max(...MODELS.flatMap(m => DATA.models[m].mcnemar.flatMap(c => [c.only_ma, c.only_other]))) / 40) * 40 || 40;
+  const half = v => (v / MAXC) * 50;
+  for (const m of MODELS) {
+    const panel = el('div', 'panel'); panel.append(el('div', 'panel-title', m));
+    const chart = el('div', 'chart');
+    const rows = DATA.models[m].mcnemar.slice().sort((a, b) => ORDER.indexOf(a.key) - ORDER.indexOf(b.key));
+    for (const c of rows) {
+      const row = el('div', 'row' + (c.key === 'base_sc' ? ' is-sc' : '')), track = el('div', 'track');
+      track.append(el('div', 'center-axis'));
+      const L = el('div', 'bar left'); L.style.right = '50%'; L.style.width = `calc(${half(c.only_other)}% - 1px)`; L.tabIndex = 0; L.dataset.tip = `Só ${SHORT[c.key]} acertou: ${c.only_other} questões`;
+      const R = el('div', 'bar'); R.style.left = 'calc(50% + 1px)'; R.style.width = `calc(${half(c.only_ma)}% - 1px)`; R.tabIndex = 0; R.dataset.tip = `Só o MedAgents acertou: ${c.only_ma} questões`;
+      const lc = el('span', 'bar-count', c.only_other); lc.style.right = `calc(50% + ${half(c.only_other)}% + 6px)`;
+      const rc = el('span', 'bar-count', c.only_ma); rc.style.left = `calc(50% + ${half(c.only_ma)}% + 6px)`;
+      track.append(L, R, lc, rc);
+      const sig = c.p < 0.05, favMA = c.only_ma > c.only_other;
+      const pv = el('div', 'pval');
+      pv.append(el('small', '', 'p'), el('span', '', fmtP(c.p)), el('span', 'sig ' + (sig ? 'yes' + (favMA ? '' : ' against') : 'no'), sig ? (favMA ? 'MedAgents melhor' : 'MedAgents pior') : 'empate'));
+      row.append(el('span', 'rname', 'vs. ' + SHORT[c.key]), track, pv);
+      chart.append(row);
+    }
+    chart.append(axisRow([-MAXC, -MAXC / 2, 0, MAXC / 2, MAXC], v => Math.abs(v), v => 50 + half(v)));
+    panel.append(chart); host.append(panel);
+  }
+}
+
+/* curva do SC (SVG) */
+{
+  const host = document.getElementById('sc-charts');
+  const W = 460, H = 250, ml = 44, mr = 118, mt = 14, mb = 34;
+  for (const m of MODELS) {
+    const d = DATA.models[m], curve = d.sc_curve;
+    if (!curve.length) continue;
+    const ma = accOf(m, 'syn_verif').acc, cot = accOf(m, 'base_cot-cot1000').acc;
+    const vals = curve.map(c => c.acc).concat([ma, cot].filter(v => v != null));
+    const lo = Math.floor(Math.min(...vals) * 50) / 50, hi = Math.ceil(Math.max(...vals) * 50) / 50;
+    const K = curve.length;
+    const X = k => ml + (k - 1) / (K - 1) * (W - ml - mr), Y = v => mt + (hi - v) / (hi - lo) * (H - mt - mb);
+    let s = `<svg class="line" viewBox="0 0 ${W} ${H}" role="img" aria-label="${m}: Self-Consistency de ${pct(curve[0].acc)} com 1 amostra a ${pct(curve[K - 1].acc)} com ${K}">`;
+    for (let v = lo; v <= hi + 1e-9; v += 0.02) s += `<line x1="${ml}" x2="${W - mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)"/><text x="${ml - 8}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+    for (const k of [1, 5, 9, 13, 17, 21].filter(k => k <= K)) s += `<text x="${X(k)}" y="${H - mb + 18}" text-anchor="middle">${k}</text>`;
+    s += `<text x="${(ml + W - mr) / 2}" y="${H - 2}" text-anchor="middle">amostras (k)</text>`;
+    const lines = [];
+    if (cot != null) lines.push({ v: cot, cls: '', stroke: 'var(--ink-2)', text: 'CoT 1.000 ' + pct(cot) });
+    if (ma != null) lines.push({ v: ma, cls: 'ma', stroke: 'var(--accent)', text: 'MedAgents ' + pct(ma) });
+    lines.push({ v: curve[K - 1].acc, cls: 'sc', stroke: null, text: 'SC k=' + K + ' ' + pct(curve[K - 1].acc) });
+    lines.sort((a, b) => b.v - a.v);
+    let lastY = -1e9;
+    for (const L of lines) {
+      if (L.stroke) s += `<line x1="${ml}" x2="${W - mr}" y1="${Y(L.v)}" y2="${Y(L.v)}" stroke="${L.stroke}" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+      let ly = Math.max(Y(L.v) + 4, lastY + 14); lastY = ly;
+      s += `<text class="lbl ${L.cls}" x="${W - mr + 8}" y="${ly}">${L.text}</text>`;
+    }
+    s += `<polyline fill="none" stroke="var(--other)" stroke-width="2.5" points="${curve.map(c => X(c.k) + ',' + Y(c.acc)).join(' ')}"/>`;
+    s += `<circle cx="${X(1)}" cy="${Y(curve[0].acc)}" r="3.5" fill="var(--other)"/><circle cx="${X(K)}" cy="${Y(curve[K - 1].acc)}" r="4.5" fill="var(--other)" stroke="var(--surface)" stroke-width="2"/>`;
+    s += '</svg>';
+    const panel = el('div', 'panel'); panel.append(el('div', 'panel-title', m)); panel.insertAdjacentHTML('beforeend', s); host.append(panel);
+  }
+}
+
+/* por rodadas */
+{
+  const host = document.getElementById('rounds-charts');
+  const marks = [['base_direct', 'dir'], ['base_cot-cot1000', 'cot'], ['base_sc', 'sc'], ['syn_verif', 'ma']];
+  const ticks = [0, 0.25, 0.5, 0.75, 1], x = v => v * 100;
+  const sub = { 1: 'aprovado de primeira', 2: '1 revisão', 3: 'limite atingido' };
+  for (const m of MODELS) {
+    const panel = el('div', 'panel'); panel.append(el('div', 'panel-title', m));
+    const chart = el('div', 'chart');
+    for (const g of DATA.models[m].by_rounds) {
+      const row = el('div', 'row is-mc'), track = el('div', 'track');
+      for (const t of ticks) { const gl = el('div', 'grid-line'); gl.style.left = x(t) + '%'; track.append(gl); }
+      const tip = [`${g.rounds} ${g.rounds === 1 ? 'rodada' : 'rodadas'} · ${int(g.n)} questões`];
+      for (const [k, c] of marks) {
+        const v = g.methods[k]; if (v == null) continue;
+        const mk = el('i', 'mk ' + c); mk.style.left = x(v) + '%'; track.append(mk);
+        tip.push(`${SHORT[k]}: ${pct(v)}`);
+      }
+      if (g.sc_mean_agreement != null) tip.push(`Concordância média do SC: ${pct(g.sc_mean_agreement, 0)}`);
+      const hit = el('div', ''); hit.style.cssText = 'position:absolute;inset:0'; hit.tabIndex = 0; hit.dataset.tip = tip.join('\n'); track.append(hit);
+      row.append(el('span', 'rname', `${g.rounds} ${g.rounds === 1 ? 'rodada' : 'rodadas'}<small>${sub[g.rounds] || ''} · ${int(g.n)} questões</small>`), track, el('span', 'rval', pct(g.methods['syn_verif'])));
+      chart.append(row);
+    }
+    chart.append(axisRow(ticks, t => Math.round(t * 100) + '%', x));
+    panel.append(chart); host.append(panel);
+  }
+  const at = document.getElementById('agree-tables');
+  for (const m of MODELS) {
+    const rows = DATA.models[m].sc_vs_rounds; if (!rows.length) continue;
+    const panel = el('div', 'panel'); panel.append(el('div', 'panel-title', m));
+    const wrap = el('div', 'table-wrap'), t = el('table');
+    t.innerHTML = '<thead><tr><th>Concordância do SC</th><th class="n">Questões</th><th class="n">1 / 2 / 3 rodadas</th><th class="n">SC</th><th class="n">MedAgents</th></tr></thead>';
+    const tb = el('tbody');
+    for (const b of rows) {
+      const hi = b.bin[1] >= 1 ? '100%' : Math.round(b.bin[1] * 100) + '%';
+      const tr = el('tr'); const rd = b.rounds_dist;
+      tr.innerHTML = `<td>${Math.round(b.bin[0] * 100)}% a ${hi}</td><td class="n">${int(b.n)}</td><td class="n">${[1, 2, 3].map(i => rd[i] || 0).join(' / ')}</td><td class="n">${pct(b.acc_sc)}</td><td class="n">${pct(b.acc_ma)}</td>`;
+      tb.append(tr);
+    }
+    t.append(tb); wrap.append(t); panel.append(wrap); at.append(panel);
+  }
+}
+
+/* dinâmica entre versões */
+{
+  const host = document.getElementById('dyn-charts');
+  const cats = [['mantém certa', 'keep-ok', 'Continuou certa'], ['mantém errada', 'keep-bad', 'Continuou errada'], ['errada → certa', 'fix', 'Errada → certa'], ['certa → errada', 'break', 'Certa → errada'], ['errada → outra errada', 'swap', 'Errada → outra errada']];
+  for (const m of MODELS) {
+    const rd = DATA.models[m].round_dynamics; if (!rd) continue;
+    const panel = el('div', 'panel'); panel.append(el('div', 'panel-title', m));
+    const hl = el('div', 'headline');
+    hl.innerHTML = `<div><b>${pct(rd.acc_initial_report)}</b><span>relatório inicial, antes de votar</span></div><div><b>${pct(rd.acc_final)}</b><span>resposta final</span></div><div><b>${int(rd.changed_to_correct)} / ${int(rd.changed_to_wrong)}</b><span>questões que a discussão consertou / estragou</span></div>`;
+    panel.append(hl);
+    const chart = el('div', 'chart');
+    for (const [step, counts] of Object.entries(rd.transitions)) {
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      const row = el('div', 'row'), tr = el('div', 'stack-track');
+      const tip = [`${step.replace('v', 'versão ').replace('→v', ' → versão ')} · ${int(total)} questões`];
+      for (const [key, cls, lab] of cats) { const c = counts[key] || 0; if (!c) continue; const s = el('div', 'seg ' + cls); s.style.width = (c / total * 100) + '%'; tr.append(s); tip.push(`${lab}: ${c}`); }
+      const wrap = el('div', 'track'); wrap.style.display = 'flex'; wrap.style.alignItems = 'center'; tr.style.width = '100%'; wrap.append(tr);
+      wrap.tabIndex = 0; wrap.dataset.tip = tip.join('\n');
+      const net = (counts['errada → certa'] || 0) - (counts['certa → errada'] || 0);
+      row.append(el('span', 'rname', `${step.replace('→', ' → ')}<small>${int(total)} questões</small>`), wrap, el('span', 'rval ' + (net > 0 ? 'delta-up' : net < 0 ? 'delta-down' : ''), (net > 0 ? '+' : '') + net));
+      chart.append(row);
+    }
+    panel.append(chart);
+    panel.append(el('p', 'figure-note', 'Número à direita: questões consertadas menos estragadas naquela revisão.'));
+    host.append(panel);
+  }
+  const vh = document.getElementById('votes-charts');
+  for (const m of MODELS) {
+    const v = DATA.models[m].votes; if (!v) continue;
+    const panel = el('div', 'panel'); panel.append(el('div', 'panel-title', m));
+    const chart = el('div', 'chart');
+    for (const [k, g] of Object.entries(v.acc_by_no_votes_round1)) {
+      if (g.n < 10) continue;
+      const row = el('div', 'row is-mc'), track = el('div', 'track');
+      for (const t of [0, 0.25, 0.5, 0.75, 1]) { const gl = el('div', 'grid-line'); gl.style.left = t * 100 + '%'; track.append(gl); }
+      const b = el('div', 'bar'); b.style.left = '0'; b.style.width = g.acc * 100 + '%'; b.tabIndex = 0; b.dataset.tip = `${k} “não” na 1ª rodada\n${int(g.n)} questões, acurácia ${pct(g.acc)}`;
+      track.append(b);
+      row.append(el('span', 'rname', `${k} “não”<small>${int(g.n)} questões</small>`), track, el('span', 'rval', pct(g.acc)));
+      chart.append(row);
+    }
+    chart.append(axisRow([0, 0.25, 0.5, 0.75, 1], t => Math.round(t * 100) + '%', t => t * 100));
+    panel.append(chart); vh.append(panel);
+  }
+}
+
+/* cascata */
+{
+  const host = document.getElementById('casc-tables');
+  for (const m of MODELS) {
+    const c = DATA.models[m].cascade; if (!c.length) continue;
+    const sc = accOf(m, 'base_sc'), ma = accOf(m, 'syn_verif');
+    const panel = el('div', 'panel'); panel.append(el('div', 'panel-title', m));
+    const wrap = el('div', 'table-wrap'), t = el('table');
+    t.innerHTML = '<thead><tr><th>Estratégia</th><th class="n">Escaladas</th><th class="n">Acurácia</th><th class="n">Gerações / q</th></tr></thead>';
+    const tb = el('tbody');
+    const add = (cls, a, b, cc, d) => { const tr = el('tr', cls); tr.innerHTML = `<td>${a}</td><td class="n">${b}</td><td class="n">${cc}</td><td class="n">${d}</td>`; tb.append(tr); };
+    add('is-sc', 'Só Self-Consistency', '0', pct(sc.acc), num(sc.mean_generations));
+    const bestAcc = Math.max(...c.map(r => r.acc));
+    for (const r of c) if (r.threshold < 1) add(r.acc === bestAcc ? 'hl' : '', `SC; MedAgents se concordância < ${Math.round(r.threshold * 100)}%`, int(r.escalated), pct(r.acc), num(r.generations));
+    add('is-mc', 'Só MedAgents', int(ma.n || 0), pct(ma.acc), num(ma.mean_generations));
+    t.append(tb); wrap.append(t); panel.append(wrap); host.append(panel);
+  }
+}
+
+/* outubro x novembro */
+{
+  const m = 'gpt-4o-mini';
+  if (!DATA.models[m]) document.getElementById('sec-oct').hidden = true;
+  else {
+    const tb = document.getElementById('oct-table');
+    for (const [k, c] of Object.entries(OCTOBER)) {
+      const a = accOf(m, k); if (a.acc == null) continue;
+      const d = a.acc - c / N, tr = el('tr', rowCls(k).trim());
+      tr.innerHTML = `<td>${SHORT[k]}</td><td class="n">${pct(c / N)} (${int(c)})</td><td class="n">${pct(a.acc)} (${int(a.correct)})</td><td class="n ${d > 0.0005 ? 'delta-up' : d < -0.0005 ? 'delta-down' : ''}">${d >= 0 ? '+' : '−'}${num(Math.abs(d) * 100)} p.p.</td>`;
+      tb.append(tr);
+    }
+  }
+}
+
+/* casos */
+{
+  const host = document.getElementById('cases');
+  const tc = TEXT.cases || [];
+  if (!tc.length) document.getElementById('sec-cases').hidden = true;
+  tc.forEach((c, i) => {
+    const d = DATA.cases[i]; if (!d) return;
+    const card = el('article', 'case');
+    const head = el('div', 'case-head');
+    head.append(el('span', 'outcome ' + c.outcome, c.title), el('span', 'label', `${d.model} · questão ${d.qid} · ${d.step === 'step1' ? 'Step 1' : 'Step 2&3'}`));
+    const opts = el('ul', 'options');
+    const tagsFor = k => {
+      const t = [];
+      if (k === d.gold) t.push(['gabarito', 'gold']);
+      if (k === d.medagents) t.push(['MedAgents', k === d.gold ? 'gold' : 'wrong']);
+      if (d.others['base_sc'] === k) t.push(['SC', k === d.gold ? 'gold' : 'wrong']);
+      if (d.others['base_cot-cot1000'] === k) t.push(['CoT 1.000', k === d.gold ? 'gold' : 'wrong']);
+      return t;
+    };
+    for (const k of Object.keys(d.options)) {
+      const li = el('li', k === d.gold ? 'gold' : ''), tags = el('span', 'tags');
+      for (const [txt, cls] of tagsFor(k)) tags.append(el('span', 'tag ' + cls, txt));
+      li.append(el('span', 'letter', k), el('span', '', (c.options_pt || {})[k] || d.options[k]), tags);
+      opts.append(li);
+    }
+    const chain = el('div', 'chain');
+    d.round_answers.forEach((a, v) => { if (v) chain.append(el('span', 'arrow', '→')); chain.append(el('span', 'v ' + (a === d.gold ? 'ok' : 'bad'), `v${v} ${a || '?'}`)); });
+    const doms = []; d.votes.forEach(r => Object.keys(r).forEach(k => { if (!doms.includes(k)) doms.push(k); }));
+    let html = '<thead><tr><th>Especialista</th>' + d.votes.map((_, i) => `<th>Rodada ${i + 1}</th>`).join('') + '</tr></thead><tbody>';
+    for (const dm of doms) {
+      html += `<tr><td>${SPECIALTY_PT[dm] || dm}</td>` + d.votes.map(r => r[dm] ? `<td><span class="vote ${r[dm]}">${r[dm] === 'yes' ? 'sim' : 'não'}</span></td>` : '<td><span class="vote none">·</span></td>').join('') + '</tr>';
+    }
+    const tbl = el('table', 'ballot'); tbl.innerHTML = html + '</tbody>';
+    const wrap = el('div', 'table-wrap'); wrap.append(tbl);
+    const scCount = d.sc_answers.length ? `SC: ${d.sc_answers.filter(a => a === d.gold).length} de ${d.sc_answers.length} amostras no gabarito` : '';
+    card.append(head, el('p', 'stem', c.stem_pt || ''), opts, el('span', 'label', 'Resposta de cada versão do relatório'), chain, el('span', 'label', 'Votação: concorda com o relatório?'), wrap);
+    if (c.quote) { const q = el('blockquote'); q.append(el('p', '', `“${c.quote}”`), el('cite', '', c.quote_cite || '')); card.append(q); }
+    card.append(el('p', 'case-text', c.summary || ''));
+    if (scCount) card.append(el('p', 'figure-note', scCount));
+    host.append(card);
+  });
+}
+
+/* tooltip */
+const tip = document.getElementById('tip');
+const show = (target, x, y) => {
+  tip.textContent = ''; target.dataset.tip.split('\n').forEach((line, i) => { if (i) tip.append(document.createElement('br')); tip.append(line); });
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(window.innerWidth - r.width - 8, Math.max(8, x - r.width / 2)) + 'px';
+  tip.style.top = Math.max(8, y - r.height - 12) + 'px';
+};
+document.addEventListener('pointerover', e => { const t = e.target.closest('[data-tip]'); if (t) show(t, e.clientX, e.clientY); });
+document.addEventListener('pointermove', e => { const t = e.target.closest('[data-tip]'); if (t) show(t, e.clientX, e.clientY); else tip.hidden = true; });
+document.addEventListener('pointerout', e => { if (e.target.closest('[data-tip]')) tip.hidden = true; });
+document.addEventListener('focusin', e => { const t = e.target.closest('[data-tip]'); if (t) { const r = t.getBoundingClientRect(); show(t, r.left + r.width / 2, r.top); } });
+document.addEventListener('focusout', () => { tip.hidden = true; });
+</script>

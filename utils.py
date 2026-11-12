@@ -1,12 +1,30 @@
+from collections import Counter
+
 from prompt_generator import *
 from data_utils import *
 
 
+def majority_vote(answers):
+    """Voto majoritário do Self-Consistency. Respostas vazias (sem letra) não votam.
+    Empate: vence a letra que apareceu primeiro entre as empatadas (determinístico)."""
+    valid = [a for a in answers if a]
+    if not valid:
+        return ""
+    counts = Counter(valid)
+    best = max(counts.values())
+    for a in valid:
+        if counts[a] == best:
+            return a
 
-def fully_decode(qid, realqid, question, options, gold_answer, handler, args, dataobj):
+
+
+def fully_decode(qid, realqid, question, options, gold_answer, handler, args, dataobj, reviewer=None):
 
     question_domains, options_domains, question_analyses, option_analyses, syn_report, output = "", "", "", "", "", ""
     vote_history, revision_history, syn_repo_history = [], [], []
+    round_answers, sc_answers, sc_outputs, reviewer_history = [], [], [], []
+    probe_usage = {}
+    ans = ""
 
     if args.method == "base_direct":
         direct_prompt = get_direct_prompt(question, options)
@@ -14,8 +32,17 @@ def fully_decode(qid, realqid, question, options, gold_answer, handler, args, da
         ans, output = cleansing_final_output(output)
     elif args.method == "base_cot":
         cot_prompt = get_cot_prompt(question, options)
-        output = handler.get_output_multiagent(user_input=cot_prompt, temperature=0, max_tokens=300, system_role="")
+        output = handler.get_output_multiagent(user_input=cot_prompt, temperature=0, max_tokens=args.cot_max_tokens, system_role="")
         ans, output = cleansing_final_output(output)
+    elif args.method == "base_sc":
+        # Self-Consistency (Wang et al., 2023): o mesmo prompt de CoT amostrado k vezes
+        # com temperatura > 0; a resposta final é a letra mais votada.
+        cot_prompt = get_cot_prompt(question, options)
+        sc_outputs = handler.get_samples(cot_prompt, n=args.sc_samples, max_tokens=args.cot_max_tokens,
+                                         temperature=args.sc_temperature)
+        sc_answers = [cleansing_final_output(o)[0] for o in sc_outputs]
+        ans = majority_vote(sc_answers)
+        output = ""
     else:
         # get question domains
         question_classifier, prompt_get_question_domain = get_question_domains_prompt(question)
@@ -35,7 +62,7 @@ def fully_decode(qid, realqid, question, options, gold_answer, handler, args, da
         tmp_question_analysis = []
         for _domain in question_domains:
             question_analyzer, prompt_get_question_analysis = get_question_analysis_prompt(question, _domain)
-            raw_question_analysis = handler.get_output_multiagent(user_input=prompt_get_question_analysis, temperature=0, max_tokens=300, system_role=question_analyzer)
+            raw_question_analysis = handler.get_output_multiagent(user_input=prompt_get_question_analysis, temperature=0, max_tokens=args.analysis_max_tokens, system_role=question_analyzer)
             tmp_question_analysis.append(raw_question_analysis)
         question_analyses = cleansing_analysis(tmp_question_analysis, question_domains, 'question')
 
@@ -43,7 +70,7 @@ def fully_decode(qid, realqid, question, options, gold_answer, handler, args, da
         tmp_option_analysis = []
         for _domain in options_domains:
             option_analyzer, prompt_get_options_analyses = get_options_analysis_prompt(question, options, _domain, question_analyses)
-            raw_option_analysis = handler.get_output_multiagent(user_input=prompt_get_options_analyses, temperature=0, max_tokens=300, system_role=option_analyzer)
+            raw_option_analysis = handler.get_output_multiagent(user_input=prompt_get_options_analyses, temperature=0, max_tokens=args.analysis_max_tokens, system_role=option_analyzer)
             tmp_option_analysis.append(raw_option_analysis)
         option_analyses = cleansing_analysis(tmp_option_analysis, options_domains, 'option')
 
@@ -57,14 +84,14 @@ def fully_decode(qid, realqid, question, options, gold_answer, handler, args, da
             o_analyses_text = transform_dict2text(option_analyses, "options", options)
             synthesizer, prompt_get_synthesized_report = get_synthesized_report_prompt(q_analyses_text, o_analyses_text)
             raw_synthesized_report = handler.get_output_multiagent(user_input=prompt_get_synthesized_report, temperature=0, max_tokens=2500, system_role=synthesizer)
-            syn_report = cleansing_syn_report(question, options, raw_synthesized_report)
+            syn_report = cleansing_syn_report(question, options, raw_synthesized_report, args.fix_key_knowledge)
 
             if args.method == "syn_only":
                 # final answer derivation
                 answer_prompt = get_final_answer_prompt_wsyn(syn_report)
                 output = handler.get_output_multiagent(user_input=answer_prompt, temperature=0, max_tokens=2500, system_role="")
                 ans, output = cleansing_final_output(output)
-            elif args.method == "syn_verif":
+            elif args.method in ("syn_verif", "syn_verif_review"):
                 all_domains = question_domains + options_domains
 
 
@@ -86,14 +113,30 @@ def fully_decode(qid, realqid, question, options, gold_answer, handler, args, da
                         domain_opinion = cleansing_voting(raw_domain_opi)   # "yes" / "no"
                         domain_opinions[domain] = domain_opinion
                         if domain_opinion == "no":
-                            advice_prompt = get_consensus_opinion_prompt(domain, syn_report)
-                            advice_output = handler.get_output_multiagent(user_input=advice_prompt, temperature=0, max_tokens=500, system_role=voter)
-                            revision_advice[domain] = advice_output
+                            # com --stop_at_voted, o conselho da última rodada nunca seria usado
+                            if not (args.stop_at_voted and num_try >= args.max_attempt_vote):
+                                advice_prompt = get_consensus_opinion_prompt(domain, syn_report)
+                                advice_output = handler.get_output_multiagent(user_input=advice_prompt, temperature=0, max_tokens=args.advice_max_tokens, system_role=voter)
+                                revision_advice[domain] = advice_output
                             hasno_flag = True
-                    if hasno_flag:
+                    # syn_verif_review: um revisor externo (Claude) vota no mesmo relatório.
+                    # Se votar NÃO, as correções dele entram na revisão junto com as dos especialistas.
+                    # Falha ou recusa conta como abstenção (SIM).
+                    if reviewer is not None:
+                        reviewer_role, review_prompt = get_reviewer_prompt(syn_report)
+                        review = cleansing_review(reviewer.get_output(system_role=reviewer_role, user_input=review_prompt))
+                        domain_opinions[REVIEWER_DOMAIN] = review['vote']
+                        reviewer_history.append(review)
+                        if review['vote'] == "no":
+                            revision_advice[REVIEWER_DOMAIN] = review['revisions']
+                            hasno_flag = True
+                    # --stop_at_voted: depois da última votação permitida, não aplica revisões que
+                    # ninguém vai votar; a resposta final sai do último relatório votado.
+                    last_round = num_try >= args.max_attempt_vote
+                    if hasno_flag and not (args.stop_at_voted and last_round):
                         revision_prompt = get_revision_prompt(syn_report, revision_advice)
                         revised_analysis = handler.get_output_multiagent(user_input=revision_prompt, temperature=0, max_tokens=2500, system_role="")
-                        syn_report = cleansing_syn_report(question, options, revised_analysis)
+                        syn_report = cleansing_syn_report(question, options, revised_analysis, args.fix_key_knowledge)
                         revision_history.append(revision_advice)
                         syn_repo_history.append(syn_report)
                     vote_history.append(domain_opinions)
@@ -102,7 +145,22 @@ def fully_decode(qid, realqid, question, options, gold_answer, handler, args, da
                 answer_prompt = get_final_answer_prompt_wsyn(syn_report)
                 output = handler.get_output_multiagent(user_input=answer_prompt, temperature=0, max_tokens=2500, system_role="")
                 ans, output = cleansing_final_output(output)
-                        
+
+                # Instrumentação (não muda a resposta final): qual alternativa cada versão
+                # anterior do relatório levaria a escolher, com o mesmo prompt de decisão final.
+                # round_answers[v] = resposta da versão v do relatório (0 = relatório sintetizado
+                # inicial; a última é sempre a resposta final). Se a rodada 3 ainda teve "não",
+                # existe uma versão revisada que ninguém votou, e ela é a que gera a resposta final.
+                if args.probe_rounds:
+                    before = handler.usage()
+                    for report in syn_repo_history[:-1]:
+                        probe = handler.get_output_multiagent(user_input=get_final_answer_prompt_wsyn(report),
+                                                              temperature=0, max_tokens=2500, system_role="")
+                        round_answers.append(cleansing_final_output(probe)[0])
+                    round_answers.append(ans)
+                    after = handler.usage()
+                    probe_usage = {k: after.get(k, 0) - before.get(k, 0) for k in after}
+
 
 
     data_info = {
@@ -118,7 +176,13 @@ def fully_decode(qid, realqid, question, options, gold_answer, handler, args, da
         'vote_history': vote_history,
         'revision_history': revision_history,
         'syn_repo_history': syn_repo_history,
-        'raw_output': output
+        'raw_output': output,
+        'round_answers': round_answers,
+        # chamadas de instrumentação (não fazem parte do método; descontadas no custo)
+        'probe_usage': probe_usage,
+        'reviewer_history': reviewer_history,
+        'sc_answers': sc_answers,
+        'sc_outputs': sc_outputs,
     }
     
     return data_info

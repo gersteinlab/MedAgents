@@ -1,0 +1,89 @@
+{
+ "n": 1273,
+ "k": 1075,
+ "ci": [
+  0.82351946437338,
+  0.8633315906047788
+ ],
+ "usd": 0.004096110483297796,
+ "escalated": 472,
+ "rows": [
+  {
+   "label": "Self-Consistency, 21 amostras",
+   "model": "gpt-5.4-nano",
+   "k": 1013,
+   "n": 1273,
+   "fixed": 99,
+   "broke": 37,
+   "p": 1.0260212514126377e-07,
+   "usd": 0.003507695404556164
+  },
+  {
+   "label": "Self-Consistency, 21 amostras",
+   "model": "gpt-4o-mini",
+   "k": 969,
+   "n": 1273,
+   "fixed": 141,
+   "broke": 35,
+   "p": 2.785864761539614e-16,
+   "usd": 0.003101804163393558
+  },
+  {
+   "label": "Etapa 1 sozinha, 11 + 10 amostras",
+   "model": "misto",
+   "k": 1012,
+   "n": 1273,
+   "fixed": 98,
+   "broke": 35,
+   "p": 4.292058431471202e-08,
+   "usd": 0.0033144138611453963
+  },
+  {
+   "label": "MedAgents",
+   "model": "gpt-5.4-nano",
+   "k": 1004,
+   "n": 1273,
+   "fixed": 136,
+   "broke": 65,
+   "p": 6.116190414153904e-07,
+   "usd": 0.007422799135899449
+  },
+  {
+   "label": "Self-Consistency (parte 2)",
+   "model": "gpt-5.4-nano",
+   "k": 1015,
+   "n": 1273,
+   "fixed": 97,
+   "broke": 37,
+   "p": 2.1932825010029352e-07,
+   "usd": 0.003501866457187748
+  },
+  {
+   "label": "MedAgents",
+   "model": "gpt-4o-mini",
+   "k": 943,
+   "n": 1273,
+   "fixed": 177,
+   "broke": 45,
+   "p": 1.0587163357105223e-19,
+   "usd": 0.0040244660644147695
+  },
+  {
+   "label": "Self-Consistency (parte 2)",
+   "model": "gpt-4o-mini",
+   "k": 967,
+   "n": 1273,
+   "fixed": 144,
+   "broke": 36,
+   "p": 1.6831282033939427e-16,
+   "usd": 0.0031035921445404535
+  }
+ ],
+ "near": 40,
+ "clean_k": 1039,
+ "clean_n": 1233,
+ "clean_sc": 980,
+ "total_usd": 12.539229050000001,
+ "dropped": 16,
+ "n_diff": 501
+}

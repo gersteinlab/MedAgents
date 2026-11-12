@@ -135,6 +135,22 @@ def get_consensus_opinion_prompt(domain, syn_report):
     return opinion_prompt
 
 
+REVIEWER_DOMAIN = "general medicine (external reviewer)"
+
+def get_reviewer_prompt(syn_report):
+    reviewer = "You are a senior physician acting as an external reviewer. You did not take part in writing the report you are given. " \
+        "Your role is to critically check reports written by a team of medical experts for factual errors, flawed reasoning, " \
+        "and whether the analysis supports the correct answer option."
+    review_format = "Vote: [YES or NO] \n" \
+        "Answer: [the option letter you believe is correct] \n" \
+        "Revisions: [if NO, the specific corrections the report needs; if YES, write None] \n"
+    review_prompt = f"Here is a medical report written by a team of medical experts: {syn_report} \n" \
+        f"Please critically review the report. Vote YES if its analysis is medically sound and supports the correct option, " \
+        f"or NO if it contains errors or points towards a wrong option. " \
+        f"You should output in exactly the same format as '''{review_format}'''"
+    return reviewer, review_prompt
+
+
 #revision_prompt = get_revision_prompt(revision_advice)
 
 def get_revision_prompt(syn_report, revision_advice):
