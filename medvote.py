@@ -22,6 +22,16 @@ Ablação da arquitetura em duas etapas:
   python medvote.py diff --split test --limit 0 --models gpt-5.4-nano --variants books_cases \
       --min_agreement 0.9 --trigger 1.01 --tag=-semportao
       etapa 2 também nas questões que o portão deixava de fora (concordância >= 90%, não unânimes)
+
+Etapa 2 com fichas de diferenças (MedRAG, Zhao et al.):
+  python medvote.py ddx --split validation --models gpt-5.4-nano --tag=-2c
+      busca separada para cada candidata; um agente monta, só com os livros e a pergunta final (sem o caso),
+      a ficha de cada candidata: o que ela exige, o que a confirma, o que a descarta e o que a separa das outras;
+      três agentes conferem os achados do caso contra as fichas e votam
+  --max_candidates 3 --third_min 0.1: inclui a 3ª mais votada quando ela tem pelo menos 10% dos votos
+
+Conjunto de confirmação (as questões da validação fora do piloto de 300), em pasta própria:
+  MEDVOTE_OUT=outputs/medvote/confirmacao python medvote.py vote --split validation --rest_of 300 --samples 11,10
 """
 import argparse
 import json
@@ -77,9 +87,12 @@ def diff_usage(after, before):
     return {m: {k: after[m].get(k, 0) - before.get(m, {}).get(k, 0) for k in after[m]} for m in after}
 
 
-def subset(split, limit, seed):
+def subset(split, limit, seed, rest_of=0):
     from retrieval import load_split
     qs = load_split(split)
+    if rest_of:  # questões fora do sorteio de rest_of (o piloto), para confirmar sem reusar dados
+        used = {q['qid'] for q in subset(split, rest_of, seed)}
+        return [q for q in qs if q['qid'] not in used]
     if limit and limit < len(qs):
         rng = random.Random(seed)
         qs = sorted(rng.sample(qs, limit), key=lambda q: q['qid'])
@@ -117,8 +130,9 @@ def run_pool(items, fn, path, workers, desc):
 def cmd_vote(args, handlers):
     path = os.path.join(OUT_DIR, f'{args.split}-vote.jsonl')
     done = done_qids(path)
-    todo = [q for q in subset(args.split, args.limit, args.seed) if q['qid'] not in done]
+    todo = [q for q in subset(args.split, args.limit, args.seed, args.rest_of) if q['qid'] not in done]
     print(f'{path}: já feitas {len(done)}, faltam {len(todo)}')
+    n_per = dict(zip(handlers, args.samples))
 
     def solve(q):
         for h in handlers.values():
@@ -126,7 +140,7 @@ def cmd_vote(args, handlers):
         prompt = get_cot_prompt(q['question'], q['options'])
         samples, outputs = {}, {}
         for m, h in handlers.items():
-            outs = h.get_samples(prompt, n=args.samples, max_tokens=args.max_tokens, temperature=args.temperature)
+            outs = h.get_samples(prompt, n=n_per[m], max_tokens=args.max_tokens, temperature=args.temperature)
             outputs[m] = outs
             samples[m] = [cleansing_final_output(o)[0] if o != 'ERROR.' else '' for o in outs]
         if not any(a for s in samples.values() for a in s):
@@ -310,7 +324,7 @@ def cmd_rag(args, handlers):
     from retrieval import TextbookIndex, CaseIndex
     path = os.path.join(OUT_DIR, f'{args.split}-rag{args.tag}.jsonl')
     done = done_qids(path)
-    todo = [q for q in subset(args.split, args.limit, args.seed) if q['qid'] not in done]
+    todo = [q for q in subset(args.split, args.limit, args.seed, args.rest_of) if q['qid'] not in done]
     print(f'{path}: já feitas {len(done)}, faltam {len(todo)}')
     if not todo:
         return
@@ -350,14 +364,157 @@ def cmd_rag(args, handlers):
     run_pool(todo, solve, path, args.workers, 'etapa única')
 
 
+# ------------------------------------------------------------------ etapa 2 com fichas de diferenças (MedRAG)
+DDX_QUERY_PROMPT = """You are helping a physician look up textbook passages to answer a USMLE question.
+
+Question: {question}
+Options: {options}
+After a first round of independent answers, the leading candidates are: {cands}.
+
+1. List the key findings in the question (symptoms, signs, labs, history), as short phrases.
+2. For EACH candidate, write 2 short search queries (keywords, not sentences) for a medical textbook index that
+   retrieve what that candidate requires, implies or typically shows, and what sets it apart from the other candidates.
+
+Reply only with JSON: {{"findings": ["..."], "queries": {{{qkeys}}}}}"""
+
+CARD_PROMPT = """You are building reference cards from textbook passages. You will NOT see the patient case.
+
+The exam question asks: "{ask}"
+Candidate answers: {cands}
+
+Textbook passages, grouped by the candidate they were retrieved for:
+{passages}
+
+For each candidate, write a short card with:
+- Requires / typical: findings, settings or facts that must be present (or are typical) when this is the right answer.
+- Rules it out: findings or facts that make this answer unlikely or wrong.
+- Versus the others: the specific features that tell this candidate apart from each of the other candidates.
+Base the cards on the passages and on well-established medical knowledge; cite passage numbers like [3] when used.
+Be concise: at most 6 bullet points per candidate."""
+
+DDX_PROMPT = """You are a physician answering a USMLE question. After a first round of independent answers, the leading \
+candidates are: {cands}.
+
+Reference cards for each candidate (built from textbooks, without seeing this case):
+{card}
+
+Textbook passages behind the cards:
+{passages}
+
+Question: {question}
+Options: {options}
+
+Work through it:
+1. List the key findings in the question.
+2. For each candidate, check the findings against its card: which required features are present or missing, and \
+whether any rule-out feature is present.
+3. Decide. Choose an option outside the candidates only if the findings clearly point to it.
+
+Output in exactly this format:
+Thought: [your comparison]
+Answer: [one letter, A-E]"""
+
+
+def last_sentence(text):
+    parts = [x.strip() for x in re.split(r'(?<=[.?!])\s+', text.strip()) if x.strip()]
+    return parts[-1] if parts else text[-200:]
+
+
+def cmd_ddx(args, handlers):
+    from retrieval import TextbookIndex
+    votes = {json.loads(l)['qid']: json.loads(l) for l in open(os.path.join(OUT_DIR, f'{args.split}-vote.jsonl'),
+                                                                 encoding='utf-8')}
+    path = os.path.join(OUT_DIR, f'{args.split}-ddx{args.tag}.jsonl')
+    done = done_qids(path)
+    todo = []
+    for qid, v in sorted(votes.items()):
+        pooled = [a for s in v['samples'].values() for a in s if a]
+        c = Counter(pooled)
+        top = ranked(pooled)
+        agree = c[top[0]] / len(pooled)
+        if not (args.min_agreement <= agree < args.trigger) or len(top) < 2 or qid in done:
+            continue
+        cands = top[:2]
+        if args.max_candidates >= 3 and len(top) >= 3 and c[top[2]] / len(pooled) >= args.third_min:
+            cands = top[:3]
+        elif args.only_extra_candidate:
+            continue
+        todo.append((v, cands, agree, {a: c[a] / len(pooled) for a in top[:3]}))
+    print(f'{path}: a fazer {len(todo)}; já feitas {len(done)}')
+    if not todo:
+        return
+    books = TextbookIndex()
+    qsrc = {q['qid']: q for q in subset(args.split, 0, 0)}
+    planner = handlers[args.planner]
+
+    def solve(item):
+        v, cands, agree, shares = item
+        q = qsrc[v['qid']]
+        opts = q['options']
+        clist = ', '.join(f'({a}) {opts[a]}' for a in cands)
+        for h in handlers.values():
+            h.reset_usage()
+        before = snapshot(handlers)
+        # 1) achados e buscas por candidata
+        raw = planner.get_output_multiagent('', DDX_QUERY_PROMPT.format(
+            question=q['question'], options=opts, cands=clist,
+            qkeys=', '.join(f'"{a}": ["...", "..."]' for a in cands)), max_tokens=400, temperature=0)
+        try:
+            plan = json.loads(raw[raw.find('{'):raw.rfind('}') + 1])
+            qmap = plan.get('queries', {}) if isinstance(plan, dict) else {}
+        except (ValueError, AttributeError):
+            plan, qmap = {}, {}
+        queries = {}
+        for a in cands:
+            got = qmap.get(a) if isinstance(qmap, dict) else None
+            got = [x for x in (got or []) if isinstance(x, str) and x.strip()][:2]
+            queries[a] = got or [opts[a]]
+        # 2) trechos por candidata, sem repetir entre candidatas
+        seen, groups, n = set(), {}, 0
+        for a in cands:
+            groups[a] = []
+            for ch in retrieve_books(books, queries[a], args.k_per_candidate):
+                if ch['id'] not in seen:
+                    seen.add(ch['id'])
+                    n += 1
+                    groups[a].append(dict(ch, n=n))
+        passages = '\n'.join(f"For ({a}) {opts[a]}:\n" + '\n'.join(
+            f"[{c['n']}] ({c['title'].split('_')[0]}) {c['content']}" for c in groups[a]) for a in cands)
+        planning = diff_usage(snapshot(handlers), before)
+        # 3) fichas, sem o caso
+        cb = snapshot(handlers)
+        card = planner.get_output_multiagent('', CARD_PROMPT.format(ask=last_sentence(q['question']), cands=clist,
+                                                                    passages=passages),
+                                             max_tokens=args.card_max_tokens, temperature=0)
+        card_usage = diff_usage(snapshot(handlers), cb)
+        # 4) conferência do caso contra as fichas
+        prompt = DDX_PROMPT.format(cands=clist, card=card, passages=passages, question=q['question'], options=opts)
+        vb = snapshot(handlers)
+        outs, ans = {}, {}
+        for m, h in handlers.items():
+            outs[m] = h.get_samples(prompt, n=args.per_model, max_tokens=args.max_tokens, temperature=args.temperature)
+            ans[m] = [parse_answer(x) for x in outs[m]]
+        if not any(a for x in ans.values() for a in x):
+            raise RuntimeError(f"questão {q['qid']}: nenhuma amostra válida")
+        return {'qid': q['qid'], 'split': args.split, 'gold': q['answer_idx'], 'candidates': cands, 'shares': shares,
+                'agreement': agree, 'findings': plan.get('findings', []) if isinstance(plan, dict) else [],
+                'queries': queries,
+                'books': {a: [{'id': c['id'], 'query': c['query'], 'score': c['score']} for c in groups[a]] for a in cands},
+                'card': card, 'answers': ans, 'outputs': outs,
+                'planning_usage': planning, 'card_usage': card_usage, 'usage': diff_usage(snapshot(handlers), vb)}
+
+    run_pool(todo, solve, path, args.workers, 'etapa 2 (fichas)')
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('command', choices=['vote', 'diff', 'rag'])
+    p.add_argument('command', choices=['vote', 'diff', 'rag', 'ddx'])
     p.add_argument('--split', default='validation', choices=['train', 'validation', 'test'])
     p.add_argument('--limit', type=int, default=300, help='sorteia este número de questões (0 = todas)')
     p.add_argument('--seed', type=int, default=0)
+    p.add_argument('--rest_of', type=int, default=0, help='usa as questões fora do sorteio deste tamanho (confirmação)')
     p.add_argument('--models', default='gpt-5.4-nano,gpt-4o-mini')
-    p.add_argument('--samples', type=int, default=21, help='etapa 1: amostras por modelo')
+    p.add_argument('--samples', default='21', help='etapa 1: amostras por modelo (um número, ou um por modelo: 11,10)')
     p.add_argument('--per_model', type=int, default=3, help='etapa 2: amostras por modelo e variante')
     p.add_argument('--variants', default=','.join(VARIANTS))
     p.add_argument('--trigger', type=float, default=0.9, help='etapa 2 roda abaixo desta concordância')
@@ -365,17 +522,26 @@ if __name__ == '__main__':
     p.add_argument('--tag', default='', help='sufixo do arquivo de saída (ex.: -semportao)')
     p.add_argument('--k_books', type=int, default=6)
     p.add_argument('--k_cases', type=int, default=3)
+    p.add_argument('--k_per_candidate', type=int, default=4, help='ddx: trechos por candidata')
+    p.add_argument('--card_max_tokens', type=int, default=700, help='ddx: limite das fichas')
+    p.add_argument('--max_candidates', type=int, default=2, help='ddx: 2 ou 3 candidatas')
+    p.add_argument('--third_min', type=float, default=0.1, help='ddx: fatia mínima de votos da 3ª candidata')
+    p.add_argument('--only_extra_candidate', action='store_true', help='ddx: só as questões com 3ª candidata')
     p.add_argument('--planner', default='gpt-5.4-nano')
     p.add_argument('--temperature', type=float, default=0.7)
     p.add_argument('--max_tokens', type=int, default=1000)
     p.add_argument('--workers', type=int, default=10)
     args = p.parse_args()
     args.variants = [v for v in args.variants.split(',') if v]
+    ns = [int(x) for x in args.samples.split(',')]
+    n_models = len(args.models.split(','))
+    args.samples = ns * n_models if len(ns) == 1 else ns
+    assert len(args.samples) == n_models, '--samples: um número, ou um por modelo'
     load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
     os.makedirs(OUT_DIR, exist_ok=True)
     handlers = {m: api_handler(m) for m in args.models.split(',')}
     for h in handlers.values():
         h.preflight()
     t0 = time.time()
-    {'vote': cmd_vote, 'diff': cmd_diff, 'rag': cmd_rag}[args.command](args, handlers)
+    {'vote': cmd_vote, 'diff': cmd_diff, 'rag': cmd_rag, 'ddx': cmd_ddx}[args.command](args, handlers)
     print(f'Tempo: {time.time() - t0:.0f}s')

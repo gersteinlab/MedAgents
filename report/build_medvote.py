@@ -149,6 +149,32 @@ def main():
     tb = {b['band']: b for b in AB['test']['bands']}
     ab_cost = AB['validation']['total_usd'] + AB['test']['total_usd']
 
+    # ---------------- melhoria testada: fichas de diferenças (MedRAG)
+    DJ = json.load(open('analysis/ddx_ajuste.json', encoding='utf-8'))
+    DC = json.load(open('analysis/ddx_confirmacao.json', encoding='utf-8'))
+    dj = {r['key']: r for r in DJ['rows']}
+    dc = {r['key']: r for r in DC['rows']}
+    third_rows = [r for r in DJ['rows'] if r['key'].startswith('ddx3_')]
+    conf_label = {'vote': 'Só o voto (etapa 1)', 'medvote': 'MedVote atual',
+                  'ddx': 'MedVote com fichas de diferenças', 'single3': 'Etapa única com evidência, 3 amostras'}
+    conf_rows = ''
+    for key, lab in conf_label.items():
+        r, a = dc[key], dj[key]
+        cls = ' class="is-mc"' if key == 'medvote' else (' class="hl"' if key == 'ddx' else '')
+        conf_rows += (f'<tr{cls}><td>{lab}</td><td class="n">{pct(r["acc"])}</td><td class="n">US$ {num(r["usd"] * 1000)}</td>'
+                      f'<td class="n">{dfmt(r) if key != "medvote" else "—"}</td>'
+                      f'<td class="n">{pfmt(r["p"]) if key != "medvote" else "—"}</td>'
+                      f'<td class="n">{a["escalated_correct"]} de {DJ["escalated"]}</td></tr>')
+    # teste + confirmação: etapa única com 3 amostras contra o MedVote
+    _t3 = abt['Etapa única, 3 amostras do nano']
+    _x, _y = _t3['vs_mv_gain'] + dc['single3']['gain'], _t3['vs_mv_loss'] + dc['single3']['loss']
+    _n = TN + DC['n']
+    pool_d = (_x - _y) / _n
+    _se = ((_x + _y) - (_x - _y) ** 2 / _n) ** 0.5 / _n
+    pool = {'diff': pool_d, 'diff_ci': [pool_d - 1.96 * _se, pool_d + 1.96 * _se], 'p': analyze.mcnemar_exact(_x, _y),
+            'name': 'pool'}
+    ddx_cost = DJ['run_usd'] + 7.07
+
     def pts(x):
         v = abs(x) * 100
         return f'{v:.1f}'.replace('.', ',') + (' ponto' if v < 2 else ' pontos')
@@ -281,7 +307,7 @@ blockquote { margin: 0; border-left: 3px solid var(--rule); padding-left: 1rem; 
 </section>
 
 <section aria-labelledby="h-abl">
-  <div class="section-head"><span class="label">Ablação</span><h2 id="h-abl">As duas etapas são necessárias? Para a acurácia, não se mostraram</h2>
+  <div class="section-head"><span class="label">Ablação</span><h2 id="h-abl">As duas etapas são necessárias? Rendem pouco: cerca de 1,5 ponto</h2>
   <div class="prose"><p>O MedVote tem três peças: um voto entre amostras sem evidência, um portão que só deixa passar as questões divididas e um diagnóstico diferencial com livros entre as duas candidatas mais votadas. Para saber qual delas faz o trabalho, comparei o MedVote, nas mesmas questões, com versões que tiram uma peça de cada vez. A principal é a <b>etapa única</b>: o mesmo planejamento de buscas, os mesmos livros e as mesmas questões resolvidas, aplicados a todas as questões, sem voto prévio e com as cinco alternativas abertas.</p>
   <p><b>O que faz o ganho é a evidência, não as duas etapas.</b> Uma única resposta do nano com os livros acerta {pct(a1['acc'])} e custa US$ {num(a1['usd'] * 1000)} a cada 1.000 questões; o voto de 21 amostras sem evidência acerta {pct(ast['acc'])} e custa US$ {num(ast['usd'] * 1000)}.</p>
   <p><b>No mesmo custo, as duas etapas ficam à frente, mas sem diferença comprovada.</b> Com 7 amostras, a etapa única custa o mesmo que o MedVote e acerta {pct(a7['acc'])} no teste, {pts(a7['diff'])} abaixo. O intervalo de 95% da diferença vai de {pts(a7['diff_ci'][0])} contra a etapa única a {pts(a7['diff_ci'][1])} a favor dela ({pfmt(a7['p'])}). Na validação, a distância foi maior ({pts(a7v['diff'])}) e também não significativa. Essa era a comparação principal, definida antes de rodar.</p>
@@ -294,7 +320,27 @@ blockquote { margin: 0; border-left: 3px solid var(--rule); padding-left: 1rem; 
   <figure class="figure"><div class="figure-title">Acertos no teste por tipo de questão</div>
     <div class="table-wrap"><table><thead><tr><th>Questões</th><th class="n">Total</th><th class="n">Só o voto</th><th class="n">MedVote</th><th class="n">Etapa única, 7 amostras</th><th class="n">Sem portão</th></tr></thead><tbody>{band_rows}</tbody></table></div>
     <p class="figure-note">Tipo definido pelo voto da etapa 1 (11 amostras do nano e 10 do 4o-mini). Nas questões divididas, o diferencial entre duas candidatas acerta {tb['divididas (etapa 2)']['medvote'] - tb['divididas (etapa 2)']['single7']} a mais que a etapa única; nas unânimes, a etapa única perde {tb['unânimes']['stage1'] - tb['unânimes']['single7']}. É daí que vem a pequena vantagem das duas etapas.</p></figure>
-  <div class="prose"><p><b>Na prática:</b> para gastar o mínimo, uma etapa só, com livros e 3 amostras, entrega quase toda a acurácia pela metade do preço. As duas etapas compram cerca de 1 ponto a mais, que estes dados não conseguem confirmar.</p></div>
+  <div class="prose"><p><b>Na prática:</b> para gastar o mínimo, uma etapa só, com livros e 3 amostras, entrega quase toda a acurácia pela metade do preço. No teste, a vantagem das duas etapas (1,2 ponto) não era significativa; somada à confirmação em questões novas (seção seguinte), fica em {pts(pool['diff'])}, com {pfmt(pool['p'])}.</p></div>
+</section>
+
+<section aria-labelledby="h-ddx">
+  <div class="section-head"><span class="label">Melhoria testada</span><h2 id="h-ddx">Fichas de diferenças, como no MedRAG: não melhoraram</h2>
+  <div class="prose"><p>No teste, o MedVote errou 198 questões. Em 76 delas, a resposta certa estava entre as duas candidatas e o diferencial escolheu a outra: o sistema chegou à pergunta certa e errou por conhecimento. O MedRAG (Zhao et al.) organiza o conhecimento justamente pelas <b>diferenças diagnósticas entre doenças parecidas</b>. Testei essa ideia na etapa 2, com três mudanças:</p>
+  <ul>
+    <li>busca separada nos livros para cada candidata;</li>
+    <li>um agente que, <b>sem ver o caso</b>, só com os trechos e a pergunta final, escreve a ficha de cada candidata: o que ela exige, o que a confirma, o que a descarta e o que a separa das outras;</li>
+    <li>três agentes que conferem os achados do caso contra as fichas e votam. Opcionalmente, a 3ª alternativa mais votada entra como candidata.</li>
+  </ul>
+  <p><b>Ajuste</b>, nas 300 questões do piloto: as fichas acertaram {dj['ddx']['escalated_correct']} das {DJ['escalated']} questões divididas, contra {dj['medvote']['escalated_correct']} do MedVote atual. A 3ª candidata piorou em todos os limiares testados (de 10% a 25% dos votos) e foi descartada.</p>
+  <p><b>Confirmação</b>, nas {DC['n']} questões da validação que nunca tinham sido usadas, com as comparações fixadas antes de rodar:</p></div></div>
+  <figure class="figure"><div class="figure-title">Confirmação: {DC['n']} questões novas, mesmo portão em todos os sistemas ({DC['escalated']} questões na etapa 2)</div>
+    <div class="table-wrap"><table><thead><tr><th>Sistema</th><th class="n">Acurácia</th><th class="n">US$ por 1.000 q</th><th class="n">Diferença para o MedVote, pontos (IC 95%)</th><th class="n">McNemar</th><th class="n">Etapa 2 no ajuste</th></tr></thead><tbody>{conf_rows}</tbody></table></div>
+    <p class="figure-note">Voto: 11 amostras do nano e 10 do 4o-mini; etapa 2 abaixo de 90% de concordância. As fichas usam só os livros, sem as questões resolvidas, com 4 trechos por candidata. A última coluna mostra os acertos nas {DJ['escalated']} questões divididas do piloto, onde o MedVote atual foi escolhido; por isso ele leva vantagem ali.</p></figure>
+  <div class="prose">
+  <p><b>O MedVote atual se confirma em questões novas:</b> {pct(dc['medvote']['acc'])}, contra {pct(dc['vote']['acc'])} do voto sozinho ({pfmt(dc['vote']['p'])}).</p>
+  <p><b>As fichas não melhoraram:</b> ficaram {pts(dc['ddx']['diff'])} abaixo ({pfmt(dc['ddx']['p'])}) e custaram mais. O motivo aparece nos registros. Como são escritas sem ver o caso, as fichas dão às duas candidatas argumentos igualmente fortes, e o peso do voto se perde. No ajuste, os agentes passaram a escolher a candidata minoritária com mais frequência (35 vezes contra 27), sem acertar mais por isso. Na questão 130, a ficha da tiamina, com 19% dos votos, convenceu as três amostras contra o burr hole correto.</p>
+  <p><b>As duas etapas valem cerca de 1,5 ponto.</b> A etapa única com 3 amostras ficou {pts(dc['single3']['diff'])} abaixo do MedVote na confirmação, pela metade do custo. Somando o teste e a confirmação, a diferença é de {pts(pool['diff'])} a favor das duas etapas (IC 95% de {num(-pool['diff_ci'][1] * 100, 1)} a {num(-pool['diff_ci'][0] * 100, 1)} pontos, {pfmt(pool['p'])}). Sozinho, nenhum dos dois conjuntos tinha tamanho para mostrar isso.</p>
+  <p><b>Correção natural, não testada:</b> manter nas fichas o peso do voto, por exemplo dizendo ao agente qual candidata a maioria escolheu e pedindo que só a troque com um achado que a contradiga. Avaliá-la sem viés exigiria questões novas, e a validação e o teste do MedQA já foram usados.</p></div>
 </section>
 
 <section aria-labelledby="h-score">
@@ -353,24 +399,28 @@ blockquote { margin: 0; border-left: 3px solid var(--rule); padding-left: 1rem; 
     <li><b>Vazamento pelo treino:</b> 25 questões da validação e 40 do teste têm uma quase-cópia no treino (Jaccard ≥ 0,6). A busca de questões resolvidas descarta essas quase-cópias; foram descartadas 6 no piloto e {T['dropped']} no teste. Sem as {T['near']} questões do teste com quase-cópia, o MedVote fica em {pct(T['clean_k'] / T['clean_n'])}.</li>
     <li><b>Vazamento pelos livros:</b> o trecho recuperado mais parecido com qualquer questão do piloto tem Jaccard de 0,19. Os livros são o corpus oficial que acompanha o MedQA.</li>
     <li><b>Seleção na validação:</b> mistura, limiar, variante e votantes foram escolhidos nas {N} questões da validação. O teste foi rodado uma vez, com essa configuração fixada; nenhuma escolha foi refeita depois de ver o teste.</li>
-    <li><b>Ablação no teste:</b> a ablação usa o mesmo teste, mas não escolhe uma configuração nova; ela mede o peso de cada peça do MedVote já fixado. As versões mais simples (etapa única com 3 amostras, ou só os livros como evidência) parecem tão boas quanto o MedVote, mas, adotadas a partir daqui, precisariam ser confirmadas em outro conjunto de questões.</li>
+    <li><b>Ablação no teste:</b> a ablação usa o mesmo teste, mas não escolhe uma configuração nova; ela mede o peso de cada peça do MedVote já fixado. A etapa única com 3 amostras foi depois confirmada nas {DC['n']} questões da validação nunca usadas: fica {pts(dc['single3']['diff'])} abaixo do MedVote, pela metade do custo.</li>
+    <li><b>Dados esgotados:</b> o piloto, a confirmação e o teste usam todas as questões de validação e de teste do MedQA. Novas variantes precisariam de outro conjunto de questões para uma avaliação sem viés.</li>
     <li><b>Modelos pequenos:</b> tudo foi feito com gpt-5.4-nano sem raciocínio e gpt-4o-mini. O ganho com modelos maiores não foi medido.</li>
   </ul></div>
 </section>
 
 <section aria-labelledby="h-next">
   <div class="section-head"><span class="label">Custo e reprodução</span><h2 id="h-next">Quanto custou e como repetir</h2>
-  <div class="prose"><p>O piloto na validação custou US$ {num(total_cost)} e o teste, US$ {num(T['total_usd'])}, gravando tudo: 21 amostras de cada modelo e as três variantes da etapa 2 nos dois modelos. Só a configuração fixada teria custado US$ {num(T['usd'] * TN)} no teste. A ablação custou US$ {num(ab_cost)} (validação e teste).</p></div></div>
+  <div class="prose"><p>O piloto na validação custou US$ {num(total_cost)} e o teste, US$ {num(T['total_usd'])}, gravando tudo: 21 amostras de cada modelo e as três variantes da etapa 2 nos dois modelos. Só a configuração fixada teria custado US$ {num(T['usd'] * TN)} no teste. A ablação custou US$ {num(ab_cost)} (validação e teste), e as fichas de diferenças, US$ {num(ddx_cost)} (ajuste e confirmação, incluindo o voto, o diferencial atual e a etapa única nas 972 questões novas).</p></div></div>
 <pre><code>.\\.venv\\Scripts\\python.exe medvote.py vote --split test --limit 0 --workers 16
 .\\.venv\\Scripts\\python.exe medvote.py diff --split test --limit 0 --workers 12
 .\\.venv\\Scripts\\python.exe analyze_medvote.py --split test
 # ablação
 .\\.venv\\Scripts\\python.exe medvote.py rag --split test --limit 0 --models gpt-5.4-nano --per_model 7
 .\\.venv\\Scripts\\python.exe medvote.py diff --split test --limit 0 --models gpt-5.4-nano --variants books_cases --min_agreement 0.9 --trigger 1.01 --tag=-semportao
-.\\.venv\\Scripts\\python.exe analyze_ablacao.py --split test</code></pre>
+.\\.venv\\Scripts\\python.exe analyze_ablacao.py --split test
+# fichas de diferenças: ajuste no piloto e confirmação nas 972 questões novas (ver scripts/confirmacao_ddx.sh no repositório)
+.\\.venv\\Scripts\\python.exe medvote.py ddx --split validation --models gpt-5.4-nano --tag=-2c
+.\\.venv\\Scripts\\python.exe analyze_ddx.py</code></pre>
 </section>
 
-<footer>Dados: MedQA (Jin et al., 2021), teste, validação e treino do conjunto original em inglês com 5 alternativas; livros-texto do MedQA em trechos (MedRAG/textbooks, Xiong et al., 2024) · Recuperação: BM25 (bm25s) · Modelos: gpt-5.4-nano sem raciocínio e gpt-4o-mini · Código: medvote.py, retrieval.py, analyze_medvote.py, analyze_ablacao.py, report/medvote_test.py · Novembro de 2026</footer>
+<footer>Dados: MedQA (Jin et al., 2021), teste, validação e treino do conjunto original em inglês com 5 alternativas; livros-texto do MedQA em trechos (MedRAG/textbooks, Xiong et al., 2024) · Recuperação: BM25 (bm25s) · Modelos: gpt-5.4-nano sem raciocínio e gpt-4o-mini · Código: medvote.py, retrieval.py, analyze_medvote.py, analyze_ablacao.py, analyze_ddx.py, report/medvote_test.py · Novembro de 2026</footer>
 </div>
 """
     out = os.path.join(HERE, 'medvote.html')

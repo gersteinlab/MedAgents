@@ -47,6 +47,19 @@ Mesmas 1.273 questões em todas as linhas. Os modelos são o gpt-5.4-nano (sem r
 - **Com o mesmo custo, as duas etapas ficam cerca de 1 ponto à frente.** A diferença não é significativa (p = 0,24), nem no teste nem na validação.
 - **O portão se paga:** tirá-lo aumenta o custo em 9% e não muda a acurácia.
 
+**Confirmação em questões novas e uma melhoria testada.** A validação do MedQA tem 1.272 questões e o piloto usou 300. Nas 972 restantes, nunca usadas, comparei o MedVote com três alternativas. Uma delas é uma etapa 2 com **fichas de diferenças**, inspirada no MedRAG (Zhao et al.): busca separada para cada candidata, uma ficha por candidata montada sem ver o caso, e a conferência do caso contra as fichas. Ela foi ajustada antes no piloto.
+
+| Sistema (972 questões novas) | Acurácia | US$ por 1.000 q | Diferença para o MedVote (IC 95%) |
+|---|---|---|---|
+| Só o voto | 82,2% | 3,32 | −4,3 (−6,3 a −2,4) |
+| **MedVote atual** | **86,5%** | 4,10 | — |
+| MedVote com fichas de diferenças | 84,9% | 4,35 | −1,6 (−3,4 a +0,1) |
+| Etapa única com evidência, 3 amostras | 84,7% | 2,15 | −1,9 (−3,8 a +0,1) |
+
+- **O MedVote se confirma em questões novas.**
+- **As fichas não melhoraram.** Escritas sem ver o caso, elas dão às duas candidatas argumentos igualmente fortes, e o peso do voto se perde.
+- **As duas etapas valem 1,5 ponto sobre a etapa única.** O número soma teste e confirmação (IC 95% de 0,1 a 2,8 pontos; p = 0,04), pelo dobro do custo.
+
 ## Estrutura
 
 **Código original, modificado.** Todas as mudanças são compatíveis: sem as opções novas, o comportamento é o do original.
@@ -68,6 +81,7 @@ Mesmas 1.273 questões em todas as linhas. Os modelos são o gpt-5.4-nano (sem r
 | `import_legacy.py` | Converte saídas no formato do repositório original para o formato novo. |
 | `retrieval.py` | BM25 sobre os livros-texto do MedQA e sobre as questões do treino, com filtro de quase-cópias. |
 | `medvote.py`, `analyze_medvote.py` | MedVote: etapa de voto (`vote`), etapa de diferencial (`diff`), etapa única para a ablação (`rag`) e análise de misturas, variantes e limiares. |
+| `analyze_ddx.py` | Fichas de diferenças (comando `ddx` do `medvote.py`) contra o MedVote atual, no ajuste e na confirmação. |
 | `analyze_ablacao.py` | Ablação: compara o MedVote com o voto sozinho, a etapa única, a etapa 2 sem candidatas e sem portão. |
 | `baixar_dados.py` | Baixa o MedQA original (treino, validação, teste) e os livros-texto para `ext_data/`. |
 | `inference.ps1`, `run_experiments.ps1` | Atalhos em PowerShell para as execuções das partes 1 e 2. |
@@ -135,6 +149,10 @@ python medvote.py rag --split test --limit 0 --models gpt-5.4-nano --per_model 7
 python medvote.py diff --split test --limit 0 --models gpt-5.4-nano --variants books_cases \
     --min_agreement 0.9 --trigger 1.01 --tag=-semportao
 python analyze_ablacao.py --split test
+# fichas de diferenças: ajuste no piloto e confirmação nas 972 questões da validação fora do piloto
+python medvote.py ddx --split validation --models gpt-5.4-nano --tag=-2c
+python analyze_ddx.py
+bash scripts/confirmacao_ddx.sh
 ```
 
 **Configuração fixada:**
@@ -164,11 +182,12 @@ Preços por 1M de tokens (entrada / saída): gpt-4o-mini US$ 0,15 / 0,60; gpt-5.
 | MedVote, piloto na validação (300 questões) | US$ 2,84 |
 | MedVote, teste (1.273 questões, tudo gravado) | US$ 12,54 |
 | MedVote, ablação (validação e teste) | US$ 6,93 |
+| MedVote, fichas de diferenças: ajuste e confirmação em 972 questões novas | US$ 7,45 |
 
 ## Ressalvas
 
 - **Debate e correções do MedAgents:** só foram rodados em pilotos de 20 a 30 questões. Mostram diferenças de custo, mas não de acurácia.
-- **Uso do teste:** o MedVote foi avaliado no teste uma única vez. A ablação usa o mesmo teste, mas só mede o peso de cada peça do MedVote já fixado. Se a etapa única com 3 amostras for adotada a partir daqui, ela precisa ser confirmada em outro conjunto de questões.
+- **Uso do teste:** o MedVote foi avaliado no teste uma única vez. A ablação usa o mesmo teste, mas só mede o peso de cada peça do MedVote já fixado. A etapa única com 3 amostras foi depois confirmada nas 972 questões novas. O piloto, a confirmação e o teste esgotam a validação e o teste do MedQA; novas variantes precisariam de outro conjunto de questões.
 - **Modelos:** só modelos pequenos e sem raciocínio.
 
 ## Créditos
