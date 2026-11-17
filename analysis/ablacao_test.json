@@ -1,0 +1,164 @@
+{
+ "split": "test",
+ "n": 1273,
+ "escalated": 472,
+ "nogate_extra": 218,
+ "rows": [
+  {
+   "name": "MedVote (duas etapas, configuração fixada)",
+   "k": 1075,
+   "n": 1273,
+   "acc": 0.8444619010212098,
+   "usd": 0.004096110483297797,
+   "vs_mv_gain": 0,
+   "vs_mv_loss": 0,
+   "p": 1.0,
+   "diff": 0.0,
+   "diff_ci": [
+    0.0,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "Só a etapa 1 (voto, 11 nano + 10 4o-mini)",
+   "k": 1012,
+   "n": 1273,
+   "acc": 0.7949725058915946,
+   "usd": 0.0033144138611453963,
+   "vs_mv_gain": 35,
+   "vs_mv_loss": 98,
+   "p": 4.292058431471202e-08,
+   "diff": -0.04948939512961508,
+   "diff_ci": [
+    -0.06703637720822017,
+    -0.03194241305100999
+   ],
+   "note": ""
+  },
+  {
+   "name": "Etapa única, 1 amostra do nano",
+   "k": 1044,
+   "n": 1273,
+   "acc": 0.8201099764336214,
+   "usd": 0.0012144612557513188,
+   "vs_mv_gain": 66,
+   "vs_mv_loss": 97,
+   "p": 0.01850902739156191,
+   "diff": -0.024351924587588374,
+   "diff_ci": [
+    -0.0439635436774443,
+    -0.004740305497732442
+   ],
+   "note": "média de 50 sorteios: 82.0%"
+  },
+  {
+   "name": "Etapa única, 3 amostras do nano",
+   "k": 1060,
+   "n": 1273,
+   "acc": 0.8326787117046347,
+   "usd": 0.0021678570586915057,
+   "vs_mv_gain": 66,
+   "vs_mv_loss": 81,
+   "p": 0.24812572575379233,
+   "diff": -0.01178318931657502,
+   "diff_ci": [
+    -0.030439470875964388,
+    0.006873092242814349
+   ],
+   "note": "média de 50 sorteios: 82.8%"
+  },
+  {
+   "name": "Etapa única, 5 amostras do nano",
+   "k": 1057,
+   "n": 1273,
+   "acc": 0.8303220738413197,
+   "usd": 0.0031212528616316945,
+   "vs_mv_gain": 66,
+   "vs_mv_loss": 84,
+   "p": 0.1649069826564429,
+   "diff": -0.014139827179890024,
+   "diff_ci": [
+    -0.03298085250613819,
+    0.004701198146358141
+   ],
+   "note": "média de 50 sorteios: 83.1%"
+  },
+  {
+   "name": "Etapa única, 7 amostras do nano",
+   "k": 1060,
+   "n": 1273,
+   "acc": 0.8326787117046347,
+   "usd": 0.004074648664571878,
+   "vs_mv_gain": 65,
+   "vs_mv_loss": 80,
+   "p": 0.2448835934437572,
+   "diff": -0.01178318931657502,
+   "diff_ci": [
+    -0.030311968924795263,
+    0.0067455902916452246
+   ],
+   "note": ""
+  },
+  {
+   "name": "Duas etapas, etapa 2 sem candidatas (etapa única nas divididas)",
+   "k": 1067,
+   "n": 1273,
+   "acc": 0.8381775333857031,
+   "usd": 0.004156544878988515,
+   "vs_mv_gain": 52,
+   "vs_mv_loss": 60,
+   "p": 0.5085131799736614,
+   "diff": -0.006284367635506678,
+   "diff_ci": [
+    -0.02257504652905508,
+    0.010006311258041724
+   ],
+   "note": ""
+  },
+  {
+   "name": "MedVote sem portão (etapa 2 em todas as não unânimes)",
+   "k": 1076,
+   "n": 1273,
+   "acc": 0.845247446975648,
+   "usd": 0.00444731366475892,
+   "vs_mv_gain": 10,
+   "vs_mv_loss": 9,
+   "p": 1.0,
+   "diff": 0.0007855459544383347,
+   "diff_ci": [
+    -0.005925581551645406,
+    0.007496673460522076
+   ],
+   "note": "690 questões na etapa 2"
+  }
+ ],
+ "bands": [
+  {
+   "band": "unânimes",
+   "n": 617,
+   "medvote": 593,
+   "stage1": 593,
+   "single7": 586,
+   "nogate": 592
+  },
+  {
+   "band": "concordância >= 90%, não unânimes",
+   "n": 184,
+   "medvote": 156,
+   "stage1": 156,
+   "single7": 156,
+   "nogate": 158
+  },
+  {
+   "band": "divididas (etapa 2)",
+   "n": 472,
+   "medvote": 326,
+   "stage1": 263,
+   "single7": 318,
+   "nogate": 326
+  }
+ ],
+ "rag_dropped": 40,
+ "total_usd": 5.6341094
+}

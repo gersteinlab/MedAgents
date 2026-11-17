@@ -15,6 +15,13 @@ misturas e variantes sejam escolhidos depois, no conjunto de validação, sem ch
 
   python medvote.py vote --split validation --limit 300
   python medvote.py diff --split validation --limit 300
+
+Ablação da arquitetura em duas etapas:
+  python medvote.py rag  --split test --limit 0 --models gpt-5.4-nano --per_model 7
+      etapa única: busca e resposta direta entre as 5 alternativas, sem voto prévio nem candidatas
+  python medvote.py diff --split test --limit 0 --models gpt-5.4-nano --variants books_cases \
+      --min_agreement 0.9 --trigger 1.01 --tag=-semportao
+      etapa 2 também nas questões que o portão deixava de fora (concordância >= 90%, não unânimes)
 """
 import argparse
 import json
@@ -175,20 +182,42 @@ def format_cases(cases):
     return '\n\n'.join(out)
 
 
+def retrieve_books(books, queries, k_books):
+    """Trechos divididos entre as buscas, sem repetir trecho."""
+    seen, chunks = set(), []
+    per = max(1, k_books // len(queries))
+    for s in queries:
+        for c in books.search(s, k=per + 2):
+            if c['id'] not in seen and len([x for x in chunks if x['query'] == s]) < per:
+                seen.add(c['id'])
+                chunks.append(dict(c, query=s))
+    return chunks[:k_books]
+
+
+def parse_plan(raw):
+    try:
+        plan = json.loads(raw[raw.find('{'):raw.rfind('}') + 1])
+        queries = [s for s in plan.get('queries', []) if isinstance(s, str) and s.strip()][:3]
+    except (ValueError, AttributeError):
+        plan, queries = {}, []
+    return (plan if isinstance(plan, dict) else {}), queries
+
+
 def cmd_diff(args, handlers):
     from retrieval import TextbookIndex, CaseIndex
     votes = {json.loads(l)['qid']: json.loads(l) for l in open(os.path.join(OUT_DIR, f'{args.split}-vote.jsonl'),
                                                                  encoding='utf-8')}
-    path = os.path.join(OUT_DIR, f'{args.split}-diff.jsonl')
+    path = os.path.join(OUT_DIR, f'{args.split}-diff{args.tag}.jsonl')
     done = done_qids(path)
     todo = []
     for qid, v in sorted(votes.items()):
         pooled = [a for s in v['samples'].values() for a in s if a]
         top = ranked(pooled)
         agree = Counter(pooled)[top[0]] / len(pooled)
-        if agree < args.trigger and len(top) >= 2 and qid not in done:
+        if args.min_agreement <= agree < args.trigger and len(top) >= 2 and qid not in done:
             todo.append((v, top[:2], agree))
-    print(f'{path}: questões divididas (concordância < {args.trigger:.0%}) a fazer: {len(todo)}; já feitas {len(done)}')
+    print(f'{path}: questões com concordância em [{args.min_agreement:.0%}, {args.trigger:.0%}) a fazer: {len(todo)}; '
+          f'já feitas {len(done)}')
     if not todo:
         return
     books, cases = TextbookIndex(), CaseIndex()
@@ -214,14 +243,7 @@ def cmd_diff(args, handlers):
         if not queries:  # plano falhou: busca pelas candidatas
             queries = [f'{opts[a]} {opts[b]}']
         # 2) recuperação: trechos por busca, sem repetir; casos parecidos sem quase-duplicatas
-        seen, chunks = set(), []
-        per = max(1, args.k_books // len(queries))
-        for s in queries:
-            for c in books.search(s, k=per + 2):
-                if c['id'] not in seen and len([x for x in chunks if x['query'] == s]) < per:
-                    seen.add(c['id'])
-                    chunks.append(dict(c, query=s))
-        chunks = chunks[:args.k_books]
+        chunks = retrieve_books(books, queries, args.k_books)
         similar, dropped = cases.search(q['question'], k=args.k_cases)
         planning = diff_usage(snapshot(handlers), before)
         # 3) comparação das candidatas, em três variantes
@@ -252,9 +274,85 @@ def cmd_diff(args, handlers):
     run_pool(todo, solve, path, args.workers, 'etapa 2')
 
 
+# ------------------------------------------------------------------ ablação: etapa única
+RAG_QUERY_PROMPT = """You are helping a physician look up textbook passages to answer a USMLE question.
+
+Question: {question}
+Options: {options}
+
+1. List the key findings in the question (symptoms, signs, labs, history), as short phrases.
+2. Write 3 short search queries (keywords, not sentences) for a medical textbook index. Together they should
+   retrieve the facts that best tell the most plausible options apart: what each option implies or requires, and how
+   the key findings fit each one.
+
+Reply only with JSON: {{"findings": ["..."], "queries": ["...", "...", "..."]}}"""
+
+RAG_PROMPT = """You are a physician answering a USMLE question.
+{evidence}
+Question: {question}
+Options: {options}
+
+Work through it:
+1. List the key findings in the question.
+2. For each plausible option, state what you would expect if it were correct, then check those expectations against \
+the findings: what supports it and what argues against it. Use the textbook passages and the solved questions where \
+they apply.
+3. Decide.
+
+Output in exactly this format:
+Thought: [your comparison]
+Answer: [one letter, A-E]"""
+
+
+def cmd_rag(args, handlers):
+    """Etapa única: o mesmo planejamento, a mesma busca e a mesma evidência da etapa 2 (livros + questões
+    resolvidas), mas sem voto prévio, em todas as questões e com as 5 alternativas abertas."""
+    from retrieval import TextbookIndex, CaseIndex
+    path = os.path.join(OUT_DIR, f'{args.split}-rag{args.tag}.jsonl')
+    done = done_qids(path)
+    todo = [q for q in subset(args.split, args.limit, args.seed) if q['qid'] not in done]
+    print(f'{path}: já feitas {len(done)}, faltam {len(todo)}')
+    if not todo:
+        return
+    books, cases = TextbookIndex(), CaseIndex()
+    planner = handlers[args.planner]
+
+    def solve(q):
+        opts = q['options']
+        for h in handlers.values():
+            h.reset_usage()
+        before = snapshot(handlers)
+        raw = planner.get_output_multiagent('', RAG_QUERY_PROMPT.format(question=q['question'], options=opts),
+                                            max_tokens=300, temperature=0)
+        plan, queries = parse_plan(raw)
+        if not queries:  # plano falhou: busca pelo enunciado
+            queries = [q['question'][-300:]]
+        chunks = retrieve_books(books, queries, args.k_books)
+        similar, dropped = cases.search(q['question'], k=args.k_cases)
+        planning = diff_usage(snapshot(handlers), before)
+        evidence = (f'\nTextbook passages that may help:\n{format_books(chunks)}\n\n'
+                    f'Solved practice questions similar to this one:\n{format_cases(similar)}\n')
+        prompt = RAG_PROMPT.format(evidence=evidence, question=q['question'], options=opts)
+        vb = snapshot(handlers)
+        outs, ans = {}, {}
+        for m, h in handlers.items():
+            outs[m] = h.get_samples(prompt, n=args.per_model, max_tokens=args.max_tokens, temperature=args.temperature)
+            ans[m] = [parse_answer(x) for x in outs[m]]
+        if not any(a for v in ans.values() for a in v):
+            raise RuntimeError(f"questão {q['qid']}: nenhuma amostra válida")
+        return {'qid': q['qid'], 'split': args.split, 'gold': q['answer_idx'],
+                'findings': plan.get('findings', []), 'queries': queries,
+                'books': [{'id': c['id'], 'query': c['query'], 'score': c['score']} for c in chunks],
+                'cases': [{'train_qid': c['train_qid'], 'jaccard': c['jaccard']} for c in similar],
+                'dropped_duplicates': dropped, 'planning_usage': planning,
+                'answers': ans, 'outputs': outs, 'usage': diff_usage(snapshot(handlers), vb)}
+
+    run_pool(todo, solve, path, args.workers, 'etapa única')
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('command', choices=['vote', 'diff'])
+    p.add_argument('command', choices=['vote', 'diff', 'rag'])
     p.add_argument('--split', default='validation', choices=['train', 'validation', 'test'])
     p.add_argument('--limit', type=int, default=300, help='sorteia este número de questões (0 = todas)')
     p.add_argument('--seed', type=int, default=0)
@@ -263,6 +361,8 @@ if __name__ == '__main__':
     p.add_argument('--per_model', type=int, default=3, help='etapa 2: amostras por modelo e variante')
     p.add_argument('--variants', default=','.join(VARIANTS))
     p.add_argument('--trigger', type=float, default=0.9, help='etapa 2 roda abaixo desta concordância')
+    p.add_argument('--min_agreement', type=float, default=0.0, help='etapa 2 roda a partir desta concordância')
+    p.add_argument('--tag', default='', help='sufixo do arquivo de saída (ex.: -semportao)')
     p.add_argument('--k_books', type=int, default=6)
     p.add_argument('--k_cases', type=int, default=3)
     p.add_argument('--planner', default='gpt-5.4-nano')
@@ -277,5 +377,5 @@ if __name__ == '__main__':
     for h in handlers.values():
         h.preflight()
     t0 = time.time()
-    (cmd_vote if args.command == 'vote' else cmd_diff)(args, handlers)
+    {'vote': cmd_vote, 'diff': cmd_diff, 'rag': cmd_rag}[args.command](args, handlers)
     print(f'Tempo: {time.time() - t0:.0f}s')

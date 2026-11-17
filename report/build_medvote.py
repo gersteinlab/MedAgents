@@ -31,7 +31,7 @@ def num(x, d=2):
 
 
 def pfmt(p):
-    return 'p < 0,001' if p < 0.001 else 'p = ' + f'{p:.2f}'.replace('.', ',')
+    return 'p &lt; 0,001' if p < 0.001 else 'p = ' + f'{p:.2f}'.replace('.', ',')
 
 
 def load(name):
@@ -106,6 +106,52 @@ def main():
         ('MedVote (configuração fixada)', k_sys / N, TK / TN)])
     tlo, thi = T["ci"]
     TNs = f"{TN:,}".replace(",", ".")
+
+    # ---------------- ablação: as duas etapas são necessárias?
+    AB = {sp: json.load(open(f'analysis/ablacao_{sp}.json', encoding='utf-8')) for sp in ('validation', 'test')}
+    abv = {r['name']: r for r in AB['validation']['rows']}
+    abt = {r['name']: r for r in AB['test']['rows']}
+    ab_label = {
+        'MedVote (duas etapas, configuração fixada)': 'MedVote: voto, portão e diferencial com evidência',
+        'Só a etapa 1 (voto, 11 nano + 10 4o-mini)': 'Só o voto (etapa 1)',
+        'Etapa única, 1 amostra do nano': 'Etapa única com evidência, 1 amostra',
+        'Etapa única, 3 amostras do nano': 'Etapa única com evidência, 3 amostras',
+        'Etapa única, 5 amostras do nano': 'Etapa única com evidência, 5 amostras',
+        'Etapa única, 7 amostras do nano': 'Etapa única com evidência, 7 amostras',
+        'Duas etapas, etapa 2 sem candidatas (etapa única nas divididas)': 'Duas etapas, sem restringir às candidatas',
+        'MedVote sem portão (etapa 2 em todas as não unânimes)': 'Duas etapas, sem portão'}
+
+    def dfmt(r):
+        if r['name'].startswith('MedVote (duas'):
+            return '—'
+        d, (lo, hi) = r['diff'], r['diff_ci']
+        f = lambda x: f'{x * 100:+.1f}'.replace('.', ',').replace('-', '−')  # noqa: E731
+        return f'{f(d)} ({f(lo)} a {f(hi)})'
+
+    ab_rows = ''
+    for name, lab in ab_label.items():
+        t, v = abt[name], abv[name]
+        cls = ' class="is-mc"' if name.startswith('MedVote (duas') else (' class="hl"' if name.startswith('Etapa única, 3') else '')
+        ab_rows += (f'<tr{cls}><td>{lab}</td><td class="n">{pct(t["acc"])}</td><td class="n">US$ {num(t["usd"] * 1000)}</td>'
+                    f'<td class="n">{dfmt(t)}</td><td class="n">{pfmt(t["p"]) if t is not abt[next(iter(ab_label))] else "—"}</td>'
+                    f'<td class="n">{pct(v["acc"])}</td></tr>')
+    bl = {'unânimes': 'Unânimes no voto', 'concordância >= 90%, não unânimes': 'Concordância de 90% ou mais, não unânimes',
+          'divididas (etapa 2)': 'Divididas (vão para a etapa 2)'}
+    band_rows = ''.join(f'<tr><td>{bl[b["band"]]}</td><td class="n">{b["n"]}</td><td class="n">{b["stage1"]}</td>'
+                        f'<td class="n">{b["medvote"]}</td><td class="n">{b["single7"]}</td><td class="n">{b["nogate"]}</td></tr>'
+                        for b in AB['test']['bands'])
+    a1, a3, a7 = (abt[f'Etapa única, {n} amostra{"s" if n > 1 else ""} do nano'] for n in (1, 3, 7))
+    a7v = abv['Etapa única, 7 amostras do nano']
+    ast = abt['Só a etapa 1 (voto, 11 nano + 10 4o-mini)']
+    ahy = abt['Duas etapas, etapa 2 sem candidatas (etapa única nas divididas)']
+    ang = abt['MedVote sem portão (etapa 2 em todas as não unânimes)']
+    amv = abt['MedVote (duas etapas, configuração fixada)']
+    tb = {b['band']: b for b in AB['test']['bands']}
+    ab_cost = AB['validation']['total_usd'] + AB['test']['total_usd']
+
+    def pts(x):
+        v = abs(x) * 100
+        return f'{v:.1f}'.replace('.', ',') + (' ponto' if v < 2 else ' pontos')
 
     # placar
     board = [('Self-Consistency, 21 amostras do nano', k_sc, sc_cost, 'is-sc'),
@@ -234,6 +280,23 @@ blockquote { margin: 0; border-left: 3px solid var(--rule); padding-left: 1rem; 
     <p class="figure-note">Todas as variantes foram gravadas para esta comparação, mas a configuração do placar foi fixada antes: livros e questões resolvidas, votada por 3 amostras do nano. A busca de questões resolvidas descartou {T['dropped']} quase-cópias do treino.</p></figure>
 </section>
 
+<section aria-labelledby="h-abl">
+  <div class="section-head"><span class="label">Ablação</span><h2 id="h-abl">As duas etapas são necessárias? Para a acurácia, não se mostraram</h2>
+  <div class="prose"><p>O MedVote tem três peças: um voto entre amostras sem evidência, um portão que só deixa passar as questões divididas e um diagnóstico diferencial com livros entre as duas candidatas mais votadas. Para saber qual delas faz o trabalho, comparei o MedVote, nas mesmas questões, com versões que tiram uma peça de cada vez. A principal é a <b>etapa única</b>: o mesmo planejamento de buscas, os mesmos livros e as mesmas questões resolvidas, aplicados a todas as questões, sem voto prévio e com as cinco alternativas abertas.</p>
+  <p><b>O que faz o ganho é a evidência, não as duas etapas.</b> Uma única resposta do nano com os livros acerta {pct(a1['acc'])} e custa US$ {num(a1['usd'] * 1000)} a cada 1.000 questões; o voto de 21 amostras sem evidência acerta {pct(ast['acc'])} e custa US$ {num(ast['usd'] * 1000)}.</p>
+  <p><b>No mesmo custo, as duas etapas ficam à frente, mas sem diferença comprovada.</b> Com 7 amostras, a etapa única custa o mesmo que o MedVote e acerta {pct(a7['acc'])} no teste, {pts(a7['diff'])} abaixo. O intervalo de 95% da diferença vai de {pts(a7['diff_ci'][0])} contra a etapa única a {pts(a7['diff_ci'][1])} a favor dela ({pfmt(a7['p'])}). Na validação, a distância foi maior ({pts(a7v['diff'])}) e também não significativa. Essa era a comparação principal, definida antes de rodar.</p>
+  <p><b>Três amostras bastam.</b> A etapa única com 3 amostras acerta {pct(a3['acc'])} por US$ {num(a3['usd'] * 1000)}, cerca de metade do custo do MedVote. Mais amostras não melhoram, nem no teste nem na validação.</p>
+  <p><b>O portão se paga.</b> Sem ele, a etapa 2 vai para mais {AB['test']['nogate_extra']} questões, o custo sobe {pct(ang['usd'] / amv['usd'] - 1, 0)} e o resultado muda em {ang['k'] - amv['k']:+d} questão. Nas questões unânimes, que nem chegam à etapa 2, o voto acerta {pct(tb['unânimes']['stage1'] / tb['unânimes']['n'])}; a etapa única, com evidência, erra {tb['unânimes']['stage1'] - tb['unânimes']['single7']} delas a mais.</p>
+  <p><b>Restringir às duas candidatas ajuda pouco.</b> Trocar o diferencial pela etapa única nas questões divididas custa {pts(ahy['diff'])}, sem significância ({pfmt(ahy['p'])}).</p></div></div>
+  <figure class="figure"><div class="figure-title">Teste ({TNs} questões) e validação ({N}), mesmas questões em todas as linhas</div>
+    <div class="table-wrap"><table><thead><tr><th>Arquitetura</th><th class="n">Teste</th><th class="n">US$ por 1.000 q</th><th class="n">Diferença para o MedVote, pontos (IC 95%)</th><th class="n">McNemar</th><th class="n">Validação</th></tr></thead><tbody>{ab_rows}</tbody></table></div>
+    <p class="figure-note">Etapa única: o nano responde com 6 trechos de livros e 3 questões resolvidas do treino, temperatura 0,7; as linhas de 1 a 5 amostras usam as primeiras amostras de 7 gravadas (a média de 50 sorteios dá o mesmo, ±0,5 ponto). “Sem restringir às candidatas”: nas questões divididas, a resposta da etapa única com 3 amostras no lugar do diferencial. “Sem portão”: diferencial também nas questões com concordância de 90% ou mais que não são unânimes.</p></figure>
+  <figure class="figure"><div class="figure-title">Acertos no teste por tipo de questão</div>
+    <div class="table-wrap"><table><thead><tr><th>Questões</th><th class="n">Total</th><th class="n">Só o voto</th><th class="n">MedVote</th><th class="n">Etapa única, 7 amostras</th><th class="n">Sem portão</th></tr></thead><tbody>{band_rows}</tbody></table></div>
+    <p class="figure-note">Tipo definido pelo voto da etapa 1 (11 amostras do nano e 10 do 4o-mini). Nas questões divididas, o diferencial entre duas candidatas acerta {tb['divididas (etapa 2)']['medvote'] - tb['divididas (etapa 2)']['single7']} a mais que a etapa única; nas unânimes, a etapa única perde {tb['unânimes']['stage1'] - tb['unânimes']['single7']}. É daí que vem a pequena vantagem das duas etapas.</p></figure>
+  <div class="prose"><p><b>Na prática:</b> para gastar o mínimo, uma etapa só, com livros e 3 amostras, entrega quase toda a acurácia pela metade do preço. As duas etapas compram cerca de 1 ponto a mais, que estes dados não conseguem confirmar.</p></div>
+</section>
+
 <section aria-labelledby="h-score">
   <div class="section-head"><span class="label">Validação · piloto</span><h2 id="h-score">Como a configuração foi escolhida: {N} questões sorteadas da validação</h2></div>
   <div class="table-wrap board"><table>
@@ -290,20 +353,24 @@ blockquote { margin: 0; border-left: 3px solid var(--rule); padding-left: 1rem; 
     <li><b>Vazamento pelo treino:</b> 25 questões da validação e 40 do teste têm uma quase-cópia no treino (Jaccard ≥ 0,6). A busca de questões resolvidas descarta essas quase-cópias; foram descartadas 6 no piloto e {T['dropped']} no teste. Sem as {T['near']} questões do teste com quase-cópia, o MedVote fica em {pct(T['clean_k'] / T['clean_n'])}.</li>
     <li><b>Vazamento pelos livros:</b> o trecho recuperado mais parecido com qualquer questão do piloto tem Jaccard de 0,19. Os livros são o corpus oficial que acompanha o MedQA.</li>
     <li><b>Seleção na validação:</b> mistura, limiar, variante e votantes foram escolhidos nas {N} questões da validação. O teste foi rodado uma vez, com essa configuração fixada; nenhuma escolha foi refeita depois de ver o teste.</li>
-    <li><b>O que o teste sugere, sem ter sido testado:</b> como a mistura não ajudou e as questões resolvidas não acrescentaram, uma versão mais simples (só o nano na etapa 1 e só os livros na etapa 2) deve render o mesmo. Confirmar isso exigiria outro conjunto de questões, porque o teste já foi usado.</li>
+    <li><b>Ablação no teste:</b> a ablação usa o mesmo teste, mas não escolhe uma configuração nova; ela mede o peso de cada peça do MedVote já fixado. As versões mais simples (etapa única com 3 amostras, ou só os livros como evidência) parecem tão boas quanto o MedVote, mas, adotadas a partir daqui, precisariam ser confirmadas em outro conjunto de questões.</li>
     <li><b>Modelos pequenos:</b> tudo foi feito com gpt-5.4-nano sem raciocínio e gpt-4o-mini. O ganho com modelos maiores não foi medido.</li>
   </ul></div>
 </section>
 
 <section aria-labelledby="h-next">
   <div class="section-head"><span class="label">Custo e reprodução</span><h2 id="h-next">Quanto custou e como repetir</h2>
-  <div class="prose"><p>O piloto na validação custou US$ {num(total_cost)} e o teste, US$ {num(T['total_usd'])}, gravando tudo: 21 amostras de cada modelo e as três variantes da etapa 2 nos dois modelos. Só a configuração fixada teria custado US$ {num(T['usd'] * TN)} no teste.</p></div></div>
+  <div class="prose"><p>O piloto na validação custou US$ {num(total_cost)} e o teste, US$ {num(T['total_usd'])}, gravando tudo: 21 amostras de cada modelo e as três variantes da etapa 2 nos dois modelos. Só a configuração fixada teria custado US$ {num(T['usd'] * TN)} no teste. A ablação custou US$ {num(ab_cost)} (validação e teste).</p></div></div>
 <pre><code>.\\.venv\\Scripts\\python.exe medvote.py vote --split test --limit 0 --workers 16
 .\\.venv\\Scripts\\python.exe medvote.py diff --split test --limit 0 --workers 12
-.\\.venv\\Scripts\\python.exe analyze_medvote.py --split test</code></pre>
+.\\.venv\\Scripts\\python.exe analyze_medvote.py --split test
+# ablação
+.\\.venv\\Scripts\\python.exe medvote.py rag --split test --limit 0 --models gpt-5.4-nano --per_model 7
+.\\.venv\\Scripts\\python.exe medvote.py diff --split test --limit 0 --models gpt-5.4-nano --variants books_cases --min_agreement 0.9 --trigger 1.01 --tag=-semportao
+.\\.venv\\Scripts\\python.exe analyze_ablacao.py --split test</code></pre>
 </section>
 
-<footer>Dados: MedQA (Jin et al., 2021), teste, validação e treino do conjunto original em inglês com 5 alternativas; livros-texto do MedQA em trechos (MedRAG/textbooks, Xiong et al., 2024) · Recuperação: BM25 (bm25s) · Modelos: gpt-5.4-nano sem raciocínio e gpt-4o-mini · Código: medvote.py, retrieval.py, analyze_medvote.py, report/medvote_test.py · Novembro de 2026</footer>
+<footer>Dados: MedQA (Jin et al., 2021), teste, validação e treino do conjunto original em inglês com 5 alternativas; livros-texto do MedQA em trechos (MedRAG/textbooks, Xiong et al., 2024) · Recuperação: BM25 (bm25s) · Modelos: gpt-5.4-nano sem raciocínio e gpt-4o-mini · Código: medvote.py, retrieval.py, analyze_medvote.py, analyze_ablacao.py, report/medvote_test.py · Novembro de 2026</footer>
 </div>
 """
     out = os.path.join(HERE, 'medvote.html')
