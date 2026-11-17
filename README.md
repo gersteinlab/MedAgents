@@ -31,6 +31,22 @@ Mesmas 1.273 questões em todas as linhas. Os modelos são o gpt-5.4-nano (sem r
 - **O gpt-4o-mini não aproveita a evidência**, por isso só o nano vota nessa etapa.
 - **Misturar os dois modelos no voto não ajudou no teste**, embora tenha parecido ajudar na validação.
 
+**As duas etapas são necessárias?** Comparei o MedVote com versões que tiram uma peça de cada vez. Os comandos estão em `analyze_ablacao.py`.
+
+| Arquitetura (teste) | Acurácia | US$ por 1.000 q | Diferença para o MedVote (IC 95%) |
+|---|---|---|---|
+| MedVote: voto, portão e diferencial com evidência | 84,4% | 4,10 | — |
+| Só o voto (etapa 1) | 79,5% | 3,31 | −4,9 (−6,7 a −3,2) |
+| Etapa única com evidência, 1 amostra | 82,0% | 1,21 | −2,4 (−4,4 a −0,5) |
+| Etapa única com evidência, 3 amostras | 83,3% | 2,17 | −1,2 (−3,0 a +0,7) |
+| Etapa única com evidência, 7 amostras (mesmo custo) | 83,3% | 4,07 | −1,2 (−3,0 a +0,7) |
+| Duas etapas, sem restringir às candidatas | 83,8% | 4,16 | −0,6 (−2,3 a +1,0) |
+| Duas etapas, sem portão | 84,5% | 4,45 | +0,1 (−0,6 a +0,7) |
+
+- **O ganho vem da evidência dos livros, não das duas etapas.** Na etapa única, o nano recebe direto os mesmos livros e questões resolvidas, sem voto prévio. Com uma só amostra, ela já supera o voto de 21 amostras, por um terço do custo.
+- **Com o mesmo custo, as duas etapas ficam cerca de 1 ponto à frente.** A diferença não é significativa (p = 0,24), nem no teste nem na validação.
+- **O portão se paga:** tirá-lo aumenta o custo em 9% e não muda a acurácia.
+
 ## Estrutura
 
 **Código original, modificado.** Todas as mudanças são compatíveis: sem as opções novas, o comportamento é o do original.
@@ -51,7 +67,8 @@ Mesmas 1.273 questões em todas as linhas. Os modelos são o gpt-5.4-nano (sem r
 | `claude_reviewer.py` | Claude como revisor externo do relatório do MedAgents (implementado, ainda não executado). |
 | `import_legacy.py` | Converte saídas no formato do repositório original para o formato novo. |
 | `retrieval.py` | BM25 sobre os livros-texto do MedQA e sobre as questões do treino, com filtro de quase-cópias. |
-| `medvote.py`, `analyze_medvote.py` | MedVote: etapa de voto (`vote`), etapa de diferencial (`diff`) e análise de misturas, variantes e limiares. |
+| `medvote.py`, `analyze_medvote.py` | MedVote: etapa de voto (`vote`), etapa de diferencial (`diff`), etapa única para a ablação (`rag`) e análise de misturas, variantes e limiares. |
+| `analyze_ablacao.py` | Ablação: compara o MedVote com o voto sozinho, a etapa única, a etapa 2 sem candidatas e sem portão. |
 | `baixar_dados.py` | Baixa o MedQA original (treino, validação, teste) e os livros-texto para `ext_data/`. |
 | `inference.ps1`, `run_experiments.ps1` | Atalhos em PowerShell para as execuções das partes 1 e 2. |
 | `report/` | Scripts que geram as páginas HTML dos relatórios a partir das saídas. |
@@ -113,6 +130,11 @@ python analyze_medvote.py --split validation
 python medvote.py vote --split test --limit 0 --workers 16
 python medvote.py diff --split test --limit 0 --workers 12
 python analyze_medvote.py --split test
+# ablação: etapa única (sem voto) e etapa 2 sem portão
+python medvote.py rag --split test --limit 0 --models gpt-5.4-nano --per_model 7
+python medvote.py diff --split test --limit 0 --models gpt-5.4-nano --variants books_cases \
+    --min_agreement 0.9 --trigger 1.01 --tag=-semportao
+python analyze_ablacao.py --split test
 ```
 
 **Configuração fixada:**
@@ -141,11 +163,12 @@ Preços por 1M de tokens (entrada / saída): gpt-4o-mini US$ 0,15 / 0,60; gpt-5.
 | gpt-5.4-nano, 5 métodos, 1.273 questões | US$ 14,67 |
 | MedVote, piloto na validação (300 questões) | US$ 2,84 |
 | MedVote, teste (1.273 questões, tudo gravado) | US$ 12,54 |
+| MedVote, ablação (validação e teste) | US$ 6,93 |
 
 ## Ressalvas
 
 - **Debate e correções do MedAgents:** só foram rodados em pilotos de 20 a 30 questões. Mostram diferenças de custo, mas não de acurácia.
-- **Uso do teste:** o MedVote foi avaliado no teste uma única vez. Versões mais simples sugeridas pelo resultado (só o nano no voto, só os livros como evidência) não foram testadas, porque o teste já foi usado.
+- **Uso do teste:** o MedVote foi avaliado no teste uma única vez. A ablação usa o mesmo teste, mas só mede o peso de cada peça do MedVote já fixado. Se a etapa única com 3 amostras for adotada a partir daqui, ela precisa ser confirmada em outro conjunto de questões.
 - **Modelos:** só modelos pequenos e sem raciocínio.
 
 ## Créditos
