@@ -32,6 +32,12 @@ Etapa 2 com fichas de diferenças (MedRAG, Zhao et al.):
 
 Conjunto de confirmação (as questões da validação fora do piloto de 300), em pasta própria:
   MEDVOTE_OUT=outputs/medvote/confirmacao python medvote.py vote --split validation --rest_of 300 --samples 11,10
+
+Fichas com o peso do voto (--prior): o agente sabe quantos votos cada candidata teve e só troca a majoritária
+diante de um achado do caso que contradiga a ficha dela.
+  python medvote.py ddx --split test --models gpt-5.4-nano --prior --tag=-prior
+
+MMLU médico (6 matérias, 4 alternativas; saídas em outputs/medvote/mmlu): --dataset mmlu. Ver scripts/mmlu_medvote.sh.
 """
 import argparse
 import json
@@ -51,6 +57,7 @@ from prompt_generator import get_cot_prompt
 from run import load_dotenv
 
 OUT_DIR = os.environ.get('MEDVOTE_OUT', os.path.join('outputs', 'medvote'))
+DATASET = 'medqa'
 VARIANTS = ('none', 'books', 'books_cases')
 
 
@@ -89,7 +96,7 @@ def diff_usage(after, before):
 
 def subset(split, limit, seed, rest_of=0):
     from retrieval import load_split
-    qs = load_split(split)
+    qs = load_split(split, DATASET)
     if rest_of:  # questões fora do sorteio de rest_of (o piloto), para confirmar sem reusar dados
         used = {q['qid'] for q in subset(split, rest_of, seed)}
         return [q for q in qs if q['qid'] not in used]
@@ -226,7 +233,7 @@ def cmd_diff(args, handlers):
     todo = []
     for qid, v in sorted(votes.items()):
         pooled = [a for s in v['samples'].values() for a in s if a]
-        top = ranked(pooled)
+        top = [a for a in ranked(pooled) if a in v['options']]  # só letras que existem (MMLU: A-D)
         agree = Counter(pooled)[top[0]] / len(pooled)
         if args.min_agreement <= agree < args.trigger and len(top) >= 2 and qid not in done:
             todo.append((v, top[:2], agree))
@@ -393,7 +400,7 @@ Base the cards on the passages and on well-established medical knowledge; cite p
 Be concise: at most 6 bullet points per candidate."""
 
 DDX_PROMPT = """You are a physician answering a USMLE question. After a first round of independent answers, the leading \
-candidates are: {cands}.
+candidates are: {cands}.{prior}
 
 Reference cards for each candidate (built from textbooks, without seeing this case):
 {card}
@@ -415,6 +422,12 @@ Thought: [your comparison]
 Answer: [one letter, A-E]"""
 
 
+PRIOR_TEXT = """ In that first round, {shares}. The majority answer, ({top}), is the default: switch to \
+another candidate only if something in the question contradicts its card (a rule-out feature is present, or a required \
+feature is clearly absent) and fits the other candidate better. Cards are written for every candidate and can make a \
+weak candidate sound as strong as the right one, so a supportive card alone is not a reason to switch."""
+
+
 def last_sentence(text):
     parts = [x.strip() for x in re.split(r'(?<=[.?!])\s+', text.strip()) if x.strip()]
     return parts[-1] if parts else text[-200:]
@@ -430,7 +443,7 @@ def cmd_ddx(args, handlers):
     for qid, v in sorted(votes.items()):
         pooled = [a for s in v['samples'].values() for a in s if a]
         c = Counter(pooled)
-        top = ranked(pooled)
+        top = [a for a in ranked(pooled) if a in v['options']]  # só letras que existem (MMLU: A-D)
         agree = c[top[0]] / len(pooled)
         if not (args.min_agreement <= agree < args.trigger) or len(top) < 2 or qid in done:
             continue
@@ -488,7 +501,12 @@ def cmd_ddx(args, handlers):
                                              max_tokens=args.card_max_tokens, temperature=0)
         card_usage = diff_usage(snapshot(handlers), cb)
         # 4) conferência do caso contra as fichas
-        prompt = DDX_PROMPT.format(cands=clist, card=card, passages=passages, question=q['question'], options=opts)
+        prior = ''
+        if args.prior:
+            prior = PRIOR_TEXT.format(top=cands[0], shares=', '.join(
+                f'({a}) got {shares[a]:.0%} of the answers' for a in cands))
+        prompt = DDX_PROMPT.format(cands=clist, prior=prior, card=card, passages=passages, question=q['question'],
+                                   options=opts)
         vb = snapshot(handlers)
         outs, ans = {}, {}
         for m, h in handlers.items():
@@ -500,7 +518,7 @@ def cmd_ddx(args, handlers):
                 'agreement': agree, 'findings': plan.get('findings', []) if isinstance(plan, dict) else [],
                 'queries': queries,
                 'books': {a: [{'id': c['id'], 'query': c['query'], 'score': c['score']} for c in groups[a]] for a in cands},
-                'card': card, 'answers': ans, 'outputs': outs,
+                'card': card, 'prior': prior, 'answers': ans, 'outputs': outs,
                 'planning_usage': planning, 'card_usage': card_usage, 'usage': diff_usage(snapshot(handlers), vb)}
 
     run_pool(todo, solve, path, args.workers, 'etapa 2 (fichas)')
@@ -509,6 +527,8 @@ def cmd_ddx(args, handlers):
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('command', choices=['vote', 'diff', 'rag', 'ddx'])
+    p.add_argument('--dataset', default='medqa', choices=['medqa', 'mmlu'])
+    p.add_argument('--prior', action='store_true', help='ddx: informa os votos e mantém a majoritária salvo contradição')
     p.add_argument('--split', default='validation', choices=['train', 'validation', 'test'])
     p.add_argument('--limit', type=int, default=300, help='sorteia este número de questões (0 = todas)')
     p.add_argument('--seed', type=int, default=0)
@@ -532,6 +552,11 @@ if __name__ == '__main__':
     p.add_argument('--max_tokens', type=int, default=1000)
     p.add_argument('--workers', type=int, default=10)
     args = p.parse_args()
+    DATASET = args.dataset
+    if DATASET == 'mmlu':
+        OUT_DIR = os.environ.get('MEDVOTE_OUT', os.path.join('outputs', 'medvote', 'mmlu'))
+        for _name in ('QUERY_PROMPT', 'DIFF_PROMPT', 'RAG_QUERY_PROMPT', 'RAG_PROMPT', 'DDX_QUERY_PROMPT', 'DDX_PROMPT'):
+            globals()[_name] = globals()[_name].replace('USMLE question', 'medical exam question').replace('A-E', 'A-D')
     args.variants = [v for v in args.variants.split(',') if v]
     ns = [int(x) for x in args.samples.split(',')]
     n_models = len(args.models.split(','))

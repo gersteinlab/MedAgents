@@ -6,6 +6,7 @@
                                                     (bigbio/med_qa, configuração med_qa_en_source)
   ext_data/textbooks/*.jsonl                        os 18 livros-texto do MedQA em trechos
                                                     (MedRAG/textbooks, Xiong et al., 2024)
+  ext_data/mmlu/<matéria>-{test,validation}.parquet  MMLU médico, 6 matérias, 4 alternativas (cais/mmlu)
 
 Cerca de 280 MB. Arquivos já baixados são pulados. Os índices BM25 são construídos depois,
 na primeira chamada do retrieval.py, e guardados em ext_data/index/.
@@ -21,10 +22,15 @@ BOOKS = ['Anatomy_Gray', 'Biochemistry_Lippincott', 'Cell_Biology_Alberts', 'Fir
          'Obstentrics_Williams', 'Pathology_Robbins', 'Pathoma_Husain', 'Pediatrics_Nelson', 'Pharmacology_Katzung',
          'Physiology_Levy', 'Psichiatry_DSM-5', 'Surgery_Schwartz']  # nomes como estão no repositório de origem
 
+MMLU_MED = ('anatomy', 'clinical_knowledge', 'college_biology', 'college_medicine', 'medical_genetics',
+            'professional_medicine')
+
 FILES = ([(f'{HF}/bigbio/med_qa/resolve/main/med_qa_en_source/{s}-00000-of-00001.parquet',
            os.path.join(EXT, 'medqa', f'{s}.parquet')) for s in ('train', 'validation', 'test')] +
          [(f'{HF}/MedRAG/textbooks/resolve/main/chunk/{b}.jsonl', os.path.join(EXT, 'textbooks', f'{b}.jsonl'))
-          for b in BOOKS])
+          for b in BOOKS] +
+         [(f'{HF}/cais/mmlu/resolve/main/{m}/{s}-00000-of-00001.parquet', os.path.join(EXT, 'mmlu', f'{m}-{s}.parquet'))
+          for m in MMLU_MED for s in ('test', 'validation')])
 
 
 def fetch(item):

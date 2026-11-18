@@ -21,8 +21,24 @@ INDEX_DIR = os.path.join(EXT, 'index')
 _lock = threading.Lock()
 
 
-def load_split(split):
+MMLU_MED = ('anatomy', 'clinical_knowledge', 'college_biology', 'college_medicine', 'medical_genetics',
+            'professional_medicine')  # as 6 matérias médicas do MMLU, como no MedRAG (MMLU-Med) e no MedAgents
+
+
+def load_mmlu(split):
+    """MMLU médico (cais/mmlu), 4 alternativas. qid = posição na concatenação das matérias, nesta ordem."""
+    out = []
+    for s in MMLU_MED:
+        for r in pq.read_table(os.path.join(EXT, 'mmlu', f'{s}-{split}.parquet')).to_pylist():
+            out.append({'qid': len(out), 'question': r['question'],
+                        'options': dict(zip('ABCD', r['choices'])), 'answer_idx': 'ABCD'[r['answer']], 'step': s})
+    return out
+
+
+def load_split(split, dataset='medqa'):
     """Questões de um conjunto do MedQA. qid = posição no conjunto (no teste, igual ao run.py)."""
+    if dataset == 'mmlu':
+        return load_mmlu(split)
     rows = pq.read_table(os.path.join(EXT, 'medqa', f'{split}.parquet')).to_pylist()
     out = []
     for i, r in enumerate(rows):

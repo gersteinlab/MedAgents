@@ -1,0 +1,181 @@
+{
+ "split": "test",
+ "n": 1089,
+ "escalated": 255,
+ "gold_in_candidates": 224,
+ "rows": [
+  {
+   "key": "medvote",
+   "name": "MedVote atual",
+   "k": 960,
+   "n": 1089,
+   "acc": 0.8815426997245179,
+   "ci": [
+    0.8609952800992363,
+    0.8994076913835477
+   ],
+   "usd": 0.003043027594123049,
+   "gain": 0,
+   "loss": 0,
+   "p": 1.0,
+   "diff": 0.0,
+   "diff_ci": [
+    0.0,
+    0.0
+   ],
+   "escalated_correct": 155,
+   "switched_from_vote": 88
+  },
+  {
+   "key": "prior",
+   "name": "MedVote com fichas e o peso do voto",
+   "k": 952,
+   "n": 1089,
+   "acc": 0.8741965105601469,
+   "ci": [
+    0.8531751401311386,
+    0.8925871002520972
+   ],
+   "usd": 0.003170201744719929,
+   "gain": 28,
+   "loss": 36,
+   "p": 0.38173279479333766,
+   "diff": -0.0073461891643709825,
+   "diff_ci": [
+    -0.021738107512521337,
+    0.007045729183779373
+   ],
+   "escalated_correct": 147,
+   "switched_from_vote": 79
+  },
+  {
+   "key": "cards",
+   "name": "MedVote com fichas (sem o peso do voto)",
+   "k": 951,
+   "n": 1089,
+   "acc": 0.8732782369146006,
+   "ci": [
+    0.8521991834675606,
+    0.8917329655282318
+   ],
+   "usd": 0.003167837511478424,
+   "gain": 30,
+   "loss": 39,
+   "p": 0.33555761823401514,
+   "diff": -0.008264462809917356,
+   "diff_ci": [
+    -0.023206799974213883,
+    0.006677874354379172
+   ],
+   "escalated_correct": 146,
+   "switched_from_vote": 105
+  },
+  {
+   "key": "vote",
+   "name": "Só o voto (etapa 1)",
+   "k": 972,
+   "n": 1089,
+   "acc": 0.8925619834710744,
+   "ci": [
+    0.8727701230004976,
+    0.9095939451316086
+   ],
+   "usd": 0.002621917630853995,
+   "gain": 42,
+   "loss": 30,
+   "p": 0.19450516586739908,
+   "diff": 0.011019283746556474,
+   "diff_ci": [
+    -0.0042386340927787255,
+    0.026277201585891675
+   ],
+   "escalated_correct": 167,
+   "switched_from_vote": 0
+  },
+  {
+   "key": "single3",
+   "name": "Etapa única com evidência, 3 amostras",
+   "k": 930,
+   "n": 1089,
+   "acc": 0.8539944903581267,
+   "ci": [
+    0.831777363348916,
+    0.8737228665105621
+   ],
+   "usd": 0.0016625418273645554,
+   "gain": 33,
+   "loss": 63,
+   "p": 0.002878610081200932,
+   "diff": -0.027548209366391185,
+   "diff_ci": [
+    -0.0451066658075504,
+    -0.009989752925231972
+   ],
+   "escalated_correct": 144,
+   "switched_from_vote": 94
+  }
+ ],
+ "subjects": [
+  {
+   "subject": "anatomy",
+   "label": "Anatomia",
+   "medvote": 0.7703703703703704,
+   "n": 135,
+   "prior": 0.8222222222222222,
+   "cards": 0.8296296296296296,
+   "vote": 0.8444444444444444,
+   "single3": 0.7185185185185186
+  },
+  {
+   "subject": "clinical_knowledge",
+   "label": "Conhecimento clínico",
+   "medvote": 0.8905660377358491,
+   "n": 265,
+   "prior": 0.8679245283018868,
+   "cards": 0.8603773584905661,
+   "vote": 0.8943396226415095,
+   "single3": 0.8566037735849057
+  },
+  {
+   "subject": "college_biology",
+   "label": "Biologia (graduação)",
+   "medvote": 0.9236111111111112,
+   "n": 144,
+   "prior": 0.8888888888888888,
+   "cards": 0.9027777777777778,
+   "vote": 0.9236111111111112,
+   "single3": 0.9444444444444444
+  },
+  {
+   "subject": "college_medicine",
+   "label": "Medicina (graduação)",
+   "medvote": 0.7976878612716763,
+   "n": 173,
+   "prior": 0.8034682080924855,
+   "cards": 0.7976878612716763,
+   "vote": 0.8208092485549133,
+   "single3": 0.7745664739884393
+  },
+  {
+   "subject": "medical_genetics",
+   "label": "Genética médica",
+   "medvote": 0.96,
+   "n": 100,
+   "prior": 0.94,
+   "cards": 0.94,
+   "vote": 0.95,
+   "single3": 0.93
+  },
+  {
+   "subject": "professional_medicine",
+   "label": "Medicina profissional",
+   "medvote": 0.9301470588235294,
+   "n": 272,
+   "prior": 0.9191176470588235,
+   "cards": 0.9154411764705882,
+   "vote": 0.9227941176470589,
+   "single3": 0.8933823529411765
+  }
+ ],
+ "run_usd": 6.3159532500000015
+}

@@ -60,6 +60,21 @@ Mesmas 1.273 questões em todas as linhas. Os modelos são o gpt-5.4-nano (sem r
 - **As fichas não melhoraram.** Escritas sem ver o caso, elas dão às duas candidatas argumentos igualmente fortes, e o peso do voto se perde.
 - **As duas etapas valem 1,5 ponto sobre a etapa única.** O número soma teste e confirmação (IC 95% de 0,1 a 2,8 pontos; p = 0,04), pelo dobro do custo.
 
+**MMLU médico: a etapa 2 não generaliza.** Rodei o MedVote, sem nenhum ajuste, nas 1.089 questões de teste das 6 matérias médicas do MMLU (o MMLU-Med do MedRAG de Xiong et al.), com uma variante nova: **fichas com o peso do voto** (`ddx --prior`), em que o agente sabe quantos votos cada candidata teve e só troca a majoritária diante de algo na questão que contradiga a ficha dela. A comparação principal, fixada antes de rodar, era essa variante contra o MedVote.
+
+| Sistema (MMLU médico, 1.089 questões) | Acurácia | US$ por 1.000 q | Diferença para o MedVote (IC 95%) | McNemar p |
+|---|---|---|---|---|
+| Só o voto | 89,3% | 2,62 | +1,1 (−0,4 a +2,6) | 0,19 |
+| **MedVote atual** | **88,2%** | 3,04 | — | — |
+| MedVote com fichas e o peso do voto | 87,4% | 3,17 | −0,7 (−2,2 a +0,7) | 0,38 |
+| MedVote com fichas, sem o peso do voto | 87,3% | 3,17 | −0,8 (−2,3 a +0,7) | 0,34 |
+| Etapa única com evidência, 3 amostras | 85,4% | 1,66 | −2,8 (−4,5 a −1,0) | 0,003 |
+
+- **O peso do voto não salvou as fichas.** Os agentes trocaram menos a resposta do voto (79 vezes, contra 105 sem o peso), mas acertaram o mesmo.
+- **A etapa 2 deixou de ajudar.** Só 23% das questões vão para ela (37% no MedQA); nelas, conserta 30 e estraga 42. O voto sozinho fica 1,1 ponto acima do MedVote, sem significância.
+- **A perda está em anatomia** (conserta 3, estraga 13; análise exploratória). Muitas dessas questões são de anatomia odontológica e craniofacial, que os 18 livros do USMLE quase não cobrem; quando o trecho não menciona o fato, o agente toma a ausência de evidência como evidência contra. Em medicina profissional, a matéria mais parecida com o MedQA, a etapa 2 ainda ajuda (+9 / −7).
+- **O mesmo aparece no MedRAG de Xiong et al.** (Tabela 6): no MMLU-Med, a recuperação piora o GPT-4 (83,97% para 82,80%) e só ajuda o GPT-3.5.
+
 ## Estrutura
 
 **Código original, modificado.** Todas as mudanças são compatíveis: sem as opções novas, o comportamento é o do original.
@@ -81,6 +96,7 @@ Mesmas 1.273 questões em todas as linhas. Os modelos são o gpt-5.4-nano (sem r
 | `import_legacy.py` | Converte saídas no formato do repositório original para o formato novo. |
 | `retrieval.py` | BM25 sobre os livros-texto do MedQA e sobre as questões do treino, com filtro de quase-cópias. |
 | `medvote.py`, `analyze_medvote.py` | MedVote: etapa de voto (`vote`), etapa de diferencial (`diff`), etapa única para a ablação (`rag`) e análise de misturas, variantes e limiares. |
+| `analyze_mmlu.py` | MedVote e variantes no MMLU médico (`--dataset mmlu`), com a quebra por matéria. |
 | `analyze_ddx.py` | Fichas de diferenças (comando `ddx` do `medvote.py`) contra o MedVote atual, no ajuste e na confirmação. |
 | `analyze_ablacao.py` | Ablação: compara o MedVote com o voto sozinho, a etapa única, a etapa 2 sem candidatas e sem portão. |
 | `baixar_dados.py` | Baixa o MedQA original (treino, validação, teste) e os livros-texto para `ext_data/`. |
@@ -153,6 +169,9 @@ python analyze_ablacao.py --split test
 python medvote.py ddx --split validation --models gpt-5.4-nano --tag=-2c
 python analyze_ddx.py
 bash scripts/confirmacao_ddx.sh
+# MMLU médico: ensaio na validação (123 questões) e teste (1.089), com as configurações fixadas no MedQA
+bash scripts/mmlu_medvote.sh validation
+bash scripts/mmlu_medvote.sh test          # resultado em logs/mmlu-test.md e analysis/mmlu_test.json
 ```
 
 **Configuração fixada:**
@@ -183,11 +202,13 @@ Preços por 1M de tokens (entrada / saída): gpt-4o-mini US$ 0,15 / 0,60; gpt-5.
 | MedVote, teste (1.273 questões, tudo gravado) | US$ 12,54 |
 | MedVote, ablação (validação e teste) | US$ 6,93 |
 | MedVote, fichas de diferenças: ajuste e confirmação em 972 questões novas | US$ 7,45 |
+| MedVote no MMLU médico: ensaio (123) e teste (1.089), 5 sistemas | US$ 6,95 |
 
 ## Ressalvas
 
 - **Debate e correções do MedAgents:** só foram rodados em pilotos de 20 a 30 questões. Mostram diferenças de custo, mas não de acurácia.
 - **Uso do teste:** o MedVote foi avaliado no teste uma única vez. A ablação usa o mesmo teste, mas só mede o peso de cada peça do MedVote já fixado. A etapa única com 3 amostras foi depois confirmada nas 972 questões novas. O piloto, a confirmação e o teste esgotam a validação e o teste do MedQA; novas variantes precisariam de outro conjunto de questões.
+- **MMLU médico:** a quebra por matéria não foi planejada antes e compara 6 matérias; trate-a como exploratória.
 - **Modelos:** só modelos pequenos e sem raciocínio.
 
 ## Créditos

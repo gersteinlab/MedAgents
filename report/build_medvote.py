@@ -31,7 +31,7 @@ def num(x, d=2):
 
 
 def pfmt(p):
-    return 'p &lt; 0,001' if p < 0.001 else 'p = ' + f'{p:.2f}'.replace('.', ',')
+    return 'p &lt; 0,001' if p < 0.001 else 'p = ' + f'{p:.{3 if p < 0.01 else 2}f}'.replace('.', ',')
 
 
 def load(name):
@@ -178,6 +178,27 @@ def main():
     def pts(x):
         v = abs(x) * 100
         return f'{v:.1f}'.replace('.', ',') + (' ponto' if v < 2 else ' pontos')
+
+    # ---------------- MMLU médico: generalização, com as fichas e o peso do voto
+    MM = json.load(open('analysis/mmlu_test.json', encoding='utf-8'))
+    MV = json.load(open('analysis/mmlu_validation.json', encoding='utf-8'))
+    mm = {r['key']: r for r in MM['rows']}
+    mm_label = {'vote': 'Só o voto (etapa 1)', 'medvote': 'MedVote atual',
+                'prior': 'MedVote com fichas e o peso do voto', 'cards': 'MedVote com fichas, sem o peso do voto',
+                'single3': 'Etapa única com evidência, 3 amostras'}
+    mm_rows = ''
+    for key, lab in mm_label.items():
+        r = mm[key]
+        cls = ' class="is-mc"' if key == 'medvote' else (' class="hl"' if key == 'prior' else '')
+        mm_rows += (f'<tr{cls}><td>{lab}</td><td class="n">{pct(r["acc"])}</td><td class="n">US$ {num(r["usd"] * 1000)}</td>'
+                    f'<td class="n">{dfmt(r) if key != "medvote" else "—"}</td>'
+                    f'<td class="n">{pfmt(r["p"]) if key != "medvote" else "—"}</td>'
+                    f'<td class="n">{r["switched_from_vote"] if key != "vote" else "—"}</td></tr>')
+    subj_rows = ''.join(f'<tr><td>{x["label"]}</td><td class="n">{x["n"]}</td><td class="n">{pct(x["vote"])}</td>'
+                        f'<td class="n">{pct(x["medvote"])}</td><td class="n">{pct(x["prior"])}</td></tr>'
+                        for x in MM['subjects'])
+    mm_cost = MM['run_usd'] + MV['run_usd']
+    TNs_mm = f"{MM['n']:,}".replace(',', '.')
 
     # placar
     board = [('Self-Consistency, 21 amostras do nano', k_sc, sc_cost, 'is-sc'),
@@ -343,6 +364,23 @@ blockquote { margin: 0; border-left: 3px solid var(--rule); padding-left: 1rem; 
   <p><b>Correção natural, não testada:</b> manter nas fichas o peso do voto, por exemplo dizendo ao agente qual candidata a maioria escolheu e pedindo que só a troque com um achado que a contradiga. Avaliá-la sem viés exigiria questões novas, e a validação e o teste do MedQA já foram usados.</p></div>
 </section>
 
+<section aria-labelledby="h-mmlu">
+  <div class="section-head"><span class="label">Generalização</span><h2 id="h-mmlu">MMLU médico: a etapa 2 não ajudou, nem com o peso do voto</h2>
+  <div class="prose"><p>Rodei o MedVote, sem nenhum ajuste, nas {TNs_mm} questões de teste das 6 matérias médicas do MMLU (o MMLU-Med do MedRAG de Xiong et al.), com 4 alternativas. Junto, testei a correção sugerida acima para as fichas: <b>dizer ao agente quantos votos cada candidata teve</b> e pedir que só troque a majoritária diante de algo na questão que contradiga a ficha dela. A comparação principal, fixada antes de rodar, era essa variante contra o MedVote atual. Um ensaio nas {MV['n']} questões de validação conferiu antes os prompts e as respostas de A a D.</p></div></div>
+  <figure class="figure"><div class="figure-title">MMLU médico, teste: {TNs_mm} questões, mesmo portão em todos os sistemas ({MM['escalated']} questões na etapa 2)</div>
+    <div class="table-wrap"><table><thead><tr><th>Sistema</th><th class="n">Acurácia</th><th class="n">US$ por 1.000 q</th><th class="n">Diferença para o MedVote, pontos (IC 95%)</th><th class="n">McNemar</th><th class="n">Trocas da resposta do voto</th></tr></thead><tbody>{mm_rows}</tbody></table></div>
+    <p class="figure-note">Mesma configuração do MedQA: voto de 11 amostras do nano e 10 do 4o-mini, etapa 2 abaixo de 90% de concordância, livros-texto do USMLE e questões resolvidas do treino do MedQA. A última coluna conta, nas questões divididas, quantas vezes a resposta final difere da do voto.</p></figure>
+  <div class="prose">
+  <p><b>O peso do voto não salvou as fichas:</b> os agentes trocaram menos a resposta do voto ({mm['prior']['switched_from_vote']} vezes, contra {mm['cards']['switched_from_vote']} sem o peso), mas acertaram praticamente o mesmo ({pct(mm['prior']['acc'])} contra {pct(mm['cards']['acc'])}). A diferença para o MedVote atual ficou em {pts(mm['prior']['diff'])} para baixo ({pfmt(mm['prior']['p'])}).</p>
+  <p><b>A etapa 2 deixou de ajudar.</b> O MMLU é mais fácil para estes modelos: só {pct(MM['escalated'] / MM['n'], 0)} das questões vão para a etapa 2, contra 37% no MedQA. Nelas, o diferencial conserta 30 e estraga 42; o voto sozinho fica {pts(mm['vote']['diff'])} acima do MedVote ({pfmt(mm['vote']['p'])}). A etapa única com evidência, que no MedQA quase empatava, aqui fica {pts(mm['single3']['diff'])} abaixo ({pfmt(mm['single3']['p'])}).</p></div>
+  <figure class="figure"><div class="figure-title">Acurácia por matéria (análise exploratória, não planejada antes)</div>
+    <div class="table-wrap"><table><thead><tr><th>Matéria</th><th class="n">Questões</th><th class="n">Só o voto</th><th class="n">MedVote atual</th><th class="n">Fichas com o peso do voto</th></tr></thead><tbody>{subj_rows}</tbody></table></div></figure>
+  <div class="prose">
+  <p><b>A perda está em anatomia:</b> ali o diferencial conserta 3 questões e estraga 13. Muitas dessas questões são de anatomia odontológica e craniofacial (drenagem linfática dos dentes, crescimento da mandíbula, sincondroses), que os 18 livros do USMLE quase não cobrem. Quando o trecho recuperado não menciona o fato, o agente toma a ausência de evidência como evidência contra e abandona a resposta certa do voto. Em medicina profissional, a matéria mais parecida com o MedQA, o diferencial ainda ajuda (+9 / −7).</p>
+  <p><b>O mesmo aparece no MedRAG de Xiong et al.</b> (Tabela 6): no MMLU-Med, a recuperação piora o GPT-4 (de 83,97% para 82,80%) e só ajuda modelos mais fracos, como o GPT-3.5 (de 65,04% para 66,61%).</p>
+  <p><b>Na prática:</b> a etapa 2 do MedVote vale para casos clínicos no estilo do USMLE, com livros que cobrem o assunto. Fora disso, o voto sozinho é mais seguro e mais barato. Uma melhoria possível, não testada: só levar a questão para o diferencial quando a busca encontra trechos realmente relevantes para as candidatas.</p></div>
+</section>
+
 <section aria-labelledby="h-score">
   <div class="section-head"><span class="label">Validação · piloto</span><h2 id="h-score">Como a configuração foi escolhida: {N} questões sorteadas da validação</h2></div>
   <div class="table-wrap board"><table>
@@ -400,14 +438,14 @@ blockquote { margin: 0; border-left: 3px solid var(--rule); padding-left: 1rem; 
     <li><b>Vazamento pelos livros:</b> o trecho recuperado mais parecido com qualquer questão do piloto tem Jaccard de 0,19. Os livros são o corpus oficial que acompanha o MedQA.</li>
     <li><b>Seleção na validação:</b> mistura, limiar, variante e votantes foram escolhidos nas {N} questões da validação. O teste foi rodado uma vez, com essa configuração fixada; nenhuma escolha foi refeita depois de ver o teste.</li>
     <li><b>Ablação no teste:</b> a ablação usa o mesmo teste, mas não escolhe uma configuração nova; ela mede o peso de cada peça do MedVote já fixado. A etapa única com 3 amostras foi depois confirmada nas {DC['n']} questões da validação nunca usadas: fica {pts(dc['single3']['diff'])} abaixo do MedVote, pela metade do custo.</li>
-    <li><b>Dados esgotados:</b> o piloto, a confirmação e o teste usam todas as questões de validação e de teste do MedQA. Novas variantes precisariam de outro conjunto de questões para uma avaliação sem viés.</li>
+    <li><b>Dados esgotados:</b> o piloto, a confirmação e o teste usam todas as questões de validação e de teste do MedQA. Por isso, as fichas com o peso do voto foram avaliadas no MMLU médico, onde a quebra por matéria é exploratória.</li>
     <li><b>Modelos pequenos:</b> tudo foi feito com gpt-5.4-nano sem raciocínio e gpt-4o-mini. O ganho com modelos maiores não foi medido.</li>
   </ul></div>
 </section>
 
 <section aria-labelledby="h-next">
   <div class="section-head"><span class="label">Custo e reprodução</span><h2 id="h-next">Quanto custou e como repetir</h2>
-  <div class="prose"><p>O piloto na validação custou US$ {num(total_cost)} e o teste, US$ {num(T['total_usd'])}, gravando tudo: 21 amostras de cada modelo e as três variantes da etapa 2 nos dois modelos. Só a configuração fixada teria custado US$ {num(T['usd'] * TN)} no teste. A ablação custou US$ {num(ab_cost)} (validação e teste), e as fichas de diferenças, US$ {num(ddx_cost)} (ajuste e confirmação, incluindo o voto, o diferencial atual e a etapa única nas 972 questões novas).</p></div></div>
+  <div class="prose"><p>O piloto na validação custou US$ {num(total_cost)} e o teste, US$ {num(T['total_usd'])}, gravando tudo: 21 amostras de cada modelo e as três variantes da etapa 2 nos dois modelos. Só a configuração fixada teria custado US$ {num(T['usd'] * TN)} no teste. A ablação custou US$ {num(ab_cost)} (validação e teste), e as fichas de diferenças, US$ {num(ddx_cost)} (ajuste e confirmação, incluindo o voto, o diferencial atual e a etapa única nas 972 questões novas). O MMLU médico custou US$ {num(mm_cost)} (ensaio e teste, cinco sistemas).</p></div></div>
 <pre><code>.\\.venv\\Scripts\\python.exe medvote.py vote --split test --limit 0 --workers 16
 .\\.venv\\Scripts\\python.exe medvote.py diff --split test --limit 0 --workers 12
 .\\.venv\\Scripts\\python.exe analyze_medvote.py --split test
@@ -417,10 +455,13 @@ blockquote { margin: 0; border-left: 3px solid var(--rule); padding-left: 1rem; 
 .\\.venv\\Scripts\\python.exe analyze_ablacao.py --split test
 # fichas de diferenças: ajuste no piloto e confirmação nas 972 questões novas (ver scripts/confirmacao_ddx.sh no repositório)
 .\\.venv\\Scripts\\python.exe medvote.py ddx --split validation --models gpt-5.4-nano --tag=-2c
-.\\.venv\\Scripts\\python.exe analyze_ddx.py</code></pre>
+.\\.venv\\Scripts\\python.exe analyze_ddx.py
+# MMLU médico (ensaio na validação e teste), com as configurações fixadas no MedQA
+bash scripts/mmlu_medvote.sh validation
+bash scripts/mmlu_medvote.sh test</code></pre>
 </section>
 
-<footer>Dados: MedQA (Jin et al., 2021), teste, validação e treino do conjunto original em inglês com 5 alternativas; livros-texto do MedQA em trechos (MedRAG/textbooks, Xiong et al., 2024) · Recuperação: BM25 (bm25s) · Modelos: gpt-5.4-nano sem raciocínio e gpt-4o-mini · Código: medvote.py, retrieval.py, analyze_medvote.py, analyze_ablacao.py, analyze_ddx.py, report/medvote_test.py · Novembro de 2026</footer>
+<footer>Dados: MedQA (Jin et al., 2021), teste, validação e treino do conjunto original em inglês com 5 alternativas; MMLU médico (Hendrycks et al., 2021), 6 matérias, teste e validação; livros-texto do MedQA em trechos (MedRAG/textbooks, Xiong et al., 2024) · Recuperação: BM25 (bm25s) · Modelos: gpt-5.4-nano sem raciocínio e gpt-4o-mini · Código: medvote.py, retrieval.py, analyze_medvote.py, analyze_ablacao.py, analyze_ddx.py, analyze_mmlu.py, report/medvote_test.py · Novembro de 2026</footer>
 </div>
 """
     out = os.path.join(HERE, 'medvote.html')
